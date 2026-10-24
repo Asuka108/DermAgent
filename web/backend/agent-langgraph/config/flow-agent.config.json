@@ -1,0 +1,107 @@
+{
+  "flow": {
+    "active": "default",
+    "defaultInteraction": "chat",
+    "unknownActivePolicy": "warn-default"
+  },
+  "agent": {
+    "name": "fuzhi3d-derm",
+    "description": "肤智（DermAgent） — 皮肤科智能问诊与循证辅助智能体（医生决策支持演示原型）：结构化问诊 → 必填校验/红旗筛查 → 知识库检索 → 待审核草稿 → 医生确认/修改/拒绝 → 正式报告。",
+    "version": "1.0.0",
+    "outputStyle": "concise",
+    "systemPromptPath": "prompts/derm-flow.md",
+    "includeWorkspaceInstructions": true
+  },
+  "model": {
+    "provider": "openai",
+    "name": "deepseek-v4-flash",
+    "baseUrl": "https://api.deepseek.com/v1",
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "settings": {
+      "temperature": 0,
+      "maxTokens": 16384,
+      "invokeLongTimeoutMs": 300000
+    }
+  },
+  "mcp": {
+    "configPath": "./config/mcp.default.json",
+    "mergeStrategy": "session-wins"
+  },
+  "permissions": {
+    "mode": "ask",
+    "interruptOn": [
+      "write_file",
+      "edit_file",
+      "bash",
+      "http_request"
+    ],
+    "allowedPaths": [
+      "src/app/",
+      "prompts/",
+      "builtin/",
+      "config/",
+      ".agents/"
+    ],
+    "deniedPaths": [
+      "src/runtime/",
+      "src/surfaces/"
+    ]
+  },
+  "sandbox": {
+    "profile": "workspace-write",
+    "writablePaths": [
+      "src/app/",
+      "prompts/",
+      "builtin/",
+      "config/",
+      ".agents/"
+    ],
+    "deniedWritePaths": [
+      "src/runtime/",
+      "src/surfaces/"
+    ]
+  },
+  "skills": {
+    "directories": [],
+    "progressiveLoading": true
+  },
+  "subagents": {
+    "directories": []
+  },
+  "agentsDirectories": [
+    "./builtin",
+    "./.agents"
+  ],
+  "memory": {
+    "enabled": true,
+    "dir": "~/.flowagents",
+    "addCacheControl": true
+  },
+  "logging": {
+    "level": "info",
+    "structured": true
+  },
+  "compaction": {
+    "enabled": true,
+    "contextWindow": 200000,
+    "triggerThreshold": 0.8,
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000
+  },
+  "middleware": {
+    "stuckLoopDetection": {
+      "enabled": true,
+      "threshold": 3,
+      "mode": "warn"
+    },
+    "periodicReminder": {
+      "enabled": true,
+      "firstAt": 5,
+      "every": 10
+    },
+    "costTracking": {
+      "enabled": true,
+      "warnAtTokens": 100000
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "肤智（DermAgent）— 皮肤科循证辅助智能体",
+  "short_name": "肤智",
+  "description": "对话式问诊、病例整理、3D 部位定位、循证引用。不构成诊疗建议。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10151c",
+  "theme_color": "#10151c",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

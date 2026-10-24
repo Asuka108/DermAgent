@@ -1,0 +1,431 @@
+{
+ "version": "1.0-female",
+ "model": "vendor/models/Female3d66.glb",
+ "sha256_prefix": "e395f629",
+ "note": "3d66 女性模型（853441）解剖锚点表。来源：tools/probe_female_verts.py（真机 QtWebEngine dump 命名 mesh 顶点云）+ tools/measure_female_anchors.py（numpy 聚类）+ tools/build_female_labels.py（组装）。该模型材质/网格语义命名完整（Sclera/Irises/Pupils/Cornea/Fingernails/Toenails/Lips/Ears），锚点为命名几何质心，非纯几何推断。限制：耳区可被发片遮挡（发片点击走材质名兜底报「头发」）；趾为五趾聚合；手指锚点在指甲背侧，指根点击按型带报「掌」（与男性表同口径）。",
+ "fitInfo": {
+  "min": [
+   -1.7441,
+   -2.5,
+   -0.3962
+  ],
+  "max": [
+   1.7441,
+   2.5,
+   0.3962
+  ]
+ },
+ "entries": [
+  {
+   "anatomical_label": "left_eye",
+   "display_zh": "左眼（含虹膜）",
+   "mesh_names": [],
+   "side": "left",
+   "world_xyz": [
+    0.0906,
+    2.1341,
+    0.1593
+   ],
+   "pick_hint": "眼球中心",
+   "confidence": 0.9,
+   "provenance": "顶点几何聚类（命名眼球件 Sclera/Irises/Pupils/Cornea 质心，每侧 n=295）"
+  },
+  {
+   "anatomical_label": "right_eye",
+   "display_zh": "右眼（含虹膜）",
+   "mesh_names": [],
+   "side": "right",
+   "world_xyz": [
+    -0.0906,
+    2.1341,
+    0.1593
+   ],
+   "pick_hint": "眼球中心",
+   "confidence": 0.9,
+   "provenance": "顶点几何聚类（命名眼球件 Sclera/Irises/Pupils/Cornea 质心，每侧 n=295）"
+  },
+  {
+   "anatomical_label": "nose",
+   "display_zh": "鼻",
+   "mesh_names": [],
+   "side": "midline",
+   "world_xyz": [
+    0.0001,
+    2.0231,
+    0.2612
+   ],
+   "pick_hint": "鼻尖",
+   "confidence": 0.85,
+   "provenance": "顶点几何聚类（Face mesh 中线前突带 z 最大簇，n=11）"
+  },
+  {
+   "anatomical_label": "upper_lip",
+   "display_zh": "上唇",
+   "mesh_names": [],
+   "side": "midline",
+   "world_xyz": [
+    0.0001,
+    1.9465,
+    0.1954
+   ],
+   "pick_hint": "唇区 y 中线分割",
+   "confidence": 0.75,
+   "provenance": "顶点几何聚类（Lips mesh y 中线分割）"
+  },
+  {
+   "anatomical_label": "lower_lip",
+   "display_zh": "下唇",
+   "mesh_names": [],
+   "side": "midline",
+   "world_xyz": [
+    0.0001,
+    1.9283,
+    0.1981
+   ],
+   "pick_hint": "唇区 y 中线分割",
+   "confidence": 0.75,
+   "provenance": "顶点几何聚类（Lips mesh y 中线分割）"
+  },
+  {
+   "anatomical_label": "lips",
+   "display_zh": "唇（聚合）",
+   "mesh_names": [],
+   "side": "midline",
+   "world_xyz": [
+    0.0001,
+    1.9374,
+    0.1968
+   ],
+   "pick_hint": "上下唇锚点中点",
+   "confidence": 0.8,
+   "provenance": "上下唇锚点中点"
+  },
+  {
+   "anatomical_label": "left_ear",
+   "display_zh": "左耳",
+   "mesh_names": [],
+   "side": "left",
+   "world_xyz": [
+    0.2112,
+    2.0804,
+    -0.0935
+   ],
+   "pick_hint": "耳廓质心",
+   "confidence": 0.7,
+   "provenance": "顶点几何聚类（命名耳 mesh 质心，每侧 n=229）；耳区可被发片遮挡"
+  },
+  {
+   "anatomical_label": "right_ear",
+   "display_zh": "右耳",
+   "mesh_names": [],
+   "side": "right",
+   "world_xyz": [
+    -0.2111,
+    2.0804,
+    -0.0935
+   ],
+   "pick_hint": "耳廓质心",
+   "confidence": 0.7,
+   "provenance": "顶点几何聚类（命名耳 mesh 质心，每侧 n=229）；耳区可被发片遮挡"
+  },
+  {
+   "anatomical_label": "left_thumb_finger",
+   "display_zh": "左手拇指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "left",
+   "world_xyz": [
+    1.4946,
+    0.2671,
+    0.2486
+   ],
+   "pick_hint": "指甲簇质心（指尖背侧）",
+   "confidence": 0.85,
+   "provenance": "顶点几何聚类（世界坐标 z 间隙+身份判定：A-pose 掌心朝体，四指沿 z 桡→尺排列，拇指独立簇与食指间距最大；指甲簇每指 68 顶点，左右镜像对称）",
+   "z_band": [
+    0.1917,
+    0.33
+   ],
+   "tip_x": 1.511,
+   "z_core": [
+    0.233,
+    0.261
+   ]
+  },
+  {
+   "anatomical_label": "left_index_finger",
+   "display_zh": "左手食指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "left",
+   "world_xyz": [
+    1.7026,
+    0.1677,
+    0.1348
+   ],
+   "pick_hint": "指甲簇质心（指尖背侧）",
+   "confidence": 0.85,
+   "provenance": "顶点几何聚类（世界坐标 z 间隙+身份判定：A-pose 掌心朝体，四指沿 z 桡→尺排列，拇指独立簇与食指间距最大；指甲簇每指 68 顶点，左右镜像对称）",
+   "z_band": [
+    0.1009,
+    0.1917
+   ],
+   "tip_x": 1.711,
+   "z_core": [
+    0.121,
+    0.148
+   ]
+  },
+  {
+   "anatomical_label": "left_middle_finger",
+   "display_zh": "左手中指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "left",
+   "world_xyz": [
+    1.7358,
+    0.1454,
+    0.0671
+   ],
+   "pick_hint": "指甲簇质心（指尖背侧）",
+   "confidence": 0.85,
+   "provenance": "顶点几何聚类（世界坐标 z 间隙+身份判定：A-pose 掌心朝体，四指沿 z 桡→尺排列，拇指独立簇与食指间距最大；指甲簇每指 68 顶点，左右镜像对称）",
+   "z_band": [
+    0.0294,
+    0.1009
+   ],
+   "tip_x": 1.744,
+   "z_core": [
+    0.053,
+    0.081
+   ]
+  },
+  {
+   "anatomical_label": "left_ring_finger",
+   "display_zh": "左手无名指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "left",
+   "world_xyz": [
+    1.7106,
+    0.1672,
+    -0.0083
+   ],
+   "pick_hint": "指甲簇质心（指尖背侧）",
+   "confidence": 0.85,
+   "provenance": "顶点几何聚类（世界坐标 z 间隙+身份判定：A-pose 掌心朝体，四指沿 z 桡→尺排列，拇指独立簇与食指间距最大；指甲簇每指 68 顶点，左右镜像对称）",
+   "z_band": [
+    -0.0401,
+    0.0294
+   ],
+   "tip_x": 1.719,
+   "z_core": [
+    -0.021,
+    0.005
+   ]
+  },
+  {
+   "anatomical_label": "left_little_finger",
+   "display_zh": "左手小指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "left",
+   "world_xyz": [
+    1.6534,
+    0.2138,
+    -0.0719
+   ],
+   "pick_hint": "指甲簇质心（指尖背侧）",
+   "confidence": 0.85,
+   "provenance": "顶点几何聚类（世界坐标 z 间隙+身份判定：A-pose 掌心朝体，四指沿 z 桡→尺排列，拇指独立簇与食指间距最大；指甲簇每指 68 顶点，左右镜像对称）",
+   "z_band": [
+    -0.16,
+    -0.0401
+   ],
+   "tip_x": 1.66,
+   "z_core": [
+    -0.082,
+    -0.061
+   ]
+  },
+  {
+   "anatomical_label": "right_thumb_finger",
+   "display_zh": "右手拇指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "right",
+   "world_xyz": [
+    -1.4946,
+    0.2671,
+    0.2486
+   ],
+   "pick_hint": "左侧锚点镜像（仅翻 x）",
+   "confidence": 0.8,
+   "provenance": "右侧锚点镜像（模型左右完全对称；镜像只翻 x，z/y 与左侧一致——右指甲簇实测 z 与镜像吻合）",
+   "z_band": [
+    0.1917,
+    0.33
+   ],
+   "tip_x": -1.511,
+   "z_core": [
+    0.233,
+    0.261
+   ]
+  },
+  {
+   "anatomical_label": "right_index_finger",
+   "display_zh": "右手食指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "right",
+   "world_xyz": [
+    -1.7026,
+    0.1677,
+    0.1348
+   ],
+   "pick_hint": "左侧锚点镜像（仅翻 x）",
+   "confidence": 0.8,
+   "provenance": "右侧锚点镜像（模型左右完全对称；镜像只翻 x，z/y 与左侧一致——右指甲簇实测 z 与镜像吻合）",
+   "z_band": [
+    0.1009,
+    0.1917
+   ],
+   "tip_x": -1.711,
+   "z_core": [
+    0.121,
+    0.148
+   ]
+  },
+  {
+   "anatomical_label": "right_middle_finger",
+   "display_zh": "右手中指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "right",
+   "world_xyz": [
+    -1.7358,
+    0.1454,
+    0.0671
+   ],
+   "pick_hint": "左侧锚点镜像（仅翻 x）",
+   "confidence": 0.8,
+   "provenance": "右侧锚点镜像（模型左右完全对称；镜像只翻 x，z/y 与左侧一致——右指甲簇实测 z 与镜像吻合）",
+   "z_band": [
+    0.0294,
+    0.1009
+   ],
+   "tip_x": -1.744,
+   "z_core": [
+    0.053,
+    0.081
+   ]
+  },
+  {
+   "anatomical_label": "right_ring_finger",
+   "display_zh": "右手无名指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "right",
+   "world_xyz": [
+    -1.7106,
+    0.1672,
+    -0.0083
+   ],
+   "pick_hint": "左侧锚点镜像（仅翻 x）",
+   "confidence": 0.8,
+   "provenance": "右侧锚点镜像（模型左右完全对称；镜像只翻 x，z/y 与左侧一致——右指甲簇实测 z 与镜像吻合）",
+   "z_band": [
+    -0.0401,
+    0.0294
+   ],
+   "tip_x": -1.719,
+   "z_core": [
+    -0.021,
+    0.005
+   ]
+  },
+  {
+   "anatomical_label": "right_little_finger",
+   "display_zh": "右手小指",
+   "mesh_names": [
+    "Obj3d66-853441-4-467_6"
+   ],
+   "side": "right",
+   "world_xyz": [
+    -1.6534,
+    0.2138,
+    -0.0719
+   ],
+   "pick_hint": "左侧锚点镜像（仅翻 x）",
+   "confidence": 0.8,
+   "provenance": "右侧锚点镜像（模型左右完全对称；镜像只翻 x，z/y 与左侧一致——右指甲簇实测 z 与镜像吻合）",
+   "z_band": [
+    -0.16,
+    -0.0401
+   ],
+   "tip_x": -1.66,
+   "z_core": [
+    -0.082,
+    -0.061
+   ]
+  },
+  {
+   "anatomical_label": "left_toes",
+   "display_zh": "左脚趾（聚合）",
+   "mesh_names": [],
+   "side": "left",
+   "world_xyz": [
+    0.7199,
+    -2.4519,
+    0.2588
+   ],
+   "pick_hint": "趾甲簇聚合质心",
+   "confidence": 0.7,
+   "provenance": "顶点几何聚类（Toenails mesh 按足分侧聚合质心，每足 5 簇 n=260；拇趾簇最大 n=60，趾甲位于趾背非脚底）",
+   "aggregate_of": "toenail clusters ×5"
+  },
+  {
+   "anatomical_label": "right_toes",
+   "display_zh": "右脚趾（聚合）",
+   "mesh_names": [],
+   "side": "right",
+   "world_xyz": [
+    -0.7199,
+    -2.4519,
+    0.2588
+   ],
+   "pick_hint": "趾甲簇聚合质心",
+   "confidence": 0.7,
+   "provenance": "顶点几何聚类（Toenails mesh 按足分侧聚合质心，每足 5 簇 n=260；拇趾簇最大 n=60，趾甲位于趾背非脚底）",
+   "aggregate_of": "toenail clusters ×5"
+  }
+ ],
+ "unreliable_or_missing": [
+  {
+   "anatomical_label": "toe_2..toe_5",
+   "display_zh": "第二至第五趾（单趾）",
+   "reason": "趾甲簇可分（每趾 n=50-60）但趾体网格合片，单趾体表点击归型带「足/趾」带"
+  },
+  {
+   "anatomical_label": "hair",
+   "display_zh": "头发",
+   "reason": "发片（Back/Bangs/Front/Side/Cap 等 10 材质）非皮肤，逐面语义表按面片位置报发下体区（额/面部/颈/肩胸/后脑/后颈/背 …（发覆盖）），点击头发显示被发遮盖的身体部位"
+  }
+ ],
+ "occlusion_notes": [
+  "耳区被发片部分遮挡：锚点为命名耳 mesh 真实几何，点击命中发片时报发下体区（…（发覆盖））",
+  "躯干大部分被吊带背心/内裤覆盖：区域按体表位置分区（衣物覆盖不改变解剖区域归属）"
+ ],
+ "matching": {
+  "side_convention": "x>0=解剖学左（与男性表一致）；中线经 registerHuman v28 缩放感知居中修复后 x≈0"
+ }
+}

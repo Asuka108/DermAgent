@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10151c">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<script>if ('serviceWorker' in navigator) addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}) });</script>
+<title>肤智（DermAgent）3D 人体区域定位</title>
+<style>
+  :root {
+    --bg: #ffffff; --side: #f7f8fa; --panel: #f7f8fa; --panel2: #eceef1; --border: #e8eaed;
+    --text: #1f2329; --muted: #8a919f; --accent: #1f6feb; --accent-soft: #e8f1ff; --danger: #e5484d;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+               font-family: "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+  #app { display: flex; height: 100%; }
+  #main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* —— v58 左侧导航栏：只负责导航（新对话/历史病例/项目/最近），不混 3D 控件 —— */
+  #toolbar { width: 208px; flex: 0 0 208px; display: flex; flex-direction: column; gap: 3px;
+             padding: 12px 10px; background: var(--side); border-right: 1px solid var(--border);
+             box-sizing: border-box; overflow-y: auto; }
+  #toolbar .brand { font-weight: 600; font-size: 14px; margin: 0 2px 10px; color: var(--text); }
+  #toolbar button { background: transparent; color: #4b5563; border: 1px solid transparent;
+                    border-radius: 8px; padding: 6px 8px; cursor: pointer; font-size: 12.5px;
+                    text-align: left; white-space: nowrap; }
+  #toolbar button:hover { background: var(--panel2); color: var(--text); }
+  #toolbar button.toggled { background: var(--accent-soft); color: var(--accent); }
+  .rail-item { display: flex; align-items: center; gap: 7px; width: 100%; box-sizing: border-box; }
+  .rail-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  /* v61 分组常驻侧栏：分组标题 + 条目直列 + 查看全部（全量列表走浮层面板） */
+  .rail-group { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+  .rail-group-title { color: var(--muted); font-size: 11px; padding: 2px 8px; letter-spacing: .04em; }
+  .rail-entries { display: flex; flex-direction: column; gap: 1px; }
+  .rail-entries .rail-entry { font-size: 12px; padding: 5px 8px; max-width: 100%; }
+  .rail-entries .rail-entry .entry-main { flex: 1; min-width: 0; overflow: hidden;
+                                          text-overflow: ellipsis; white-space: nowrap; }
+  .rail-entries .rail-entry .nav-row-del { flex: 0 0 auto; font-size: 10.5px; padding: 0 4px; }
+  .rail-empty { color: var(--muted); font-size: 11.5px; padding: 4px 8px; line-height: 1.5; }
+  .rail-more { color: var(--muted); font-size: 11.5px; padding: 4px 8px; }
+  .rail-more:hover { color: var(--accent); }
+  #navHint { color: var(--muted); font-size: 11px; line-height: 1.55; margin: 8px 2px 0; }
+  #navPane { display: none; }
+  /* v58：人体模型下拉移至 3D 顶部工具浮层（样式保留，位置随容器） */
+  #modelSelect { background: #fff; color: var(--text); border: 1px solid var(--border);
+                 border-radius: 8px; padding: 4px 6px; font-size: 12px; cursor: pointer; }
+  #llmModelSelect { background: #fff; color: var(--text); border: 1px solid var(--border);
+                 border-radius: 16px; padding: 5px 8px; font-size: 12px; cursor: pointer;
+                 flex: 0 0 auto; max-width: 150px; height: 32px; }
+  #llmModelSelect:hover { border-color: var(--accent); }
+  #llmModelSelect:disabled { color: var(--muted); cursor: default; }
+  /* v47：思考等级切换（发送旁、紧贴模型选择器，更紧凑） */
+  #llmThinkingSelect { background: #fff; color: var(--muted); border: 1px solid var(--border);
+                 border-radius: 16px; padding: 5px 6px; font-size: 12px; cursor: pointer;
+                 flex: 0 0 auto; max-width: 82px; height: 32px; }
+  #llmThinkingSelect:hover { border-color: var(--accent); color: var(--text); }
+  #llmThinkingSelect:disabled { color: var(--muted); cursor: default; }
+  #openSelDrawer { margin-top: auto; }
+  #regionLabel { color: #b45309; font-size: 11.5px; margin: 6px 2px 0; line-height: 1.5;
+                 overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+  /* —— v59 两态互斥布局：对话主区（默认）/ 3D 全屏主区，只显示一个，绝不叠加 ——
+        3D 只是可选的身体部位选择工具；场景不重建，切回时 ResizeObserver 重新跟随尺寸。 */
+  #workstage { flex: 1; position: relative; min-height: 0; }
+  #stage-wrap { position: absolute; inset: 0; overflow: hidden; z-index: 5; display: none; }
+  #workstage.model-primary #stage-wrap { display: block; }
+  #convPane { position: absolute; inset: 0; z-index: 4; overflow: hidden; }
+  #workstage.model-primary #convPane { display: none; }
+  #convLog { position: absolute; inset: 0; overflow-y: auto; padding: 16px 22px 12px; }
+  /* —— v58：左栏「项目 / 最近」导航面板（主区全覆盖，不混 3D 控件） —— */
+  #navPane { position: absolute; inset: 0; z-index: 10; background: #fff; display: none;
+             flex-direction: column; }
+  #navPane.open { display: flex; }
+  .nav-pane-head { display: flex; align-items: center; justify-content: space-between;
+                   padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  #navPaneClose { background: #f3f4f6; border: 1px solid var(--border); border-radius: 8px;
+                  padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--text); }
+  #navPaneClose:hover { border-color: var(--accent); color: var(--accent); }
+  #navPaneBody { flex: 1; overflow-y: auto; padding: 16px 22px; font-size: 12.5px; }
+  .nav-card { max-width: 860px; margin: 0 auto 12px; border: 1px solid var(--border);
+              border-radius: 12px; padding: 12px 14px; background: var(--side); }
+  .nav-card h4 { margin: 0 0 8px; font-size: 13px; }
+  .nav-row { display: flex; align-items: center; gap: 8px; padding: 6px 2px;
+             border-bottom: 1px dashed var(--border); font-size: 12px; }
+  .nav-row:last-child { border-bottom: none; }
+  .nav-row .row-time { color: var(--muted); font-size: 11px; flex: 0 0 auto; }
+  .nav-row .row-main { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-row button { background: #fff; border: 1px solid var(--border); border-radius: 6px;
+                    padding: 2px 8px; font-size: 11.5px; cursor: pointer; color: var(--text); }
+  .nav-row button:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-row button.nav-row-del { color: #b3543f; }
+  .nav-row button.nav-row-del:hover { border-color: #b3543f; color: #b3543f; background: #fdf3f0; }
+  .nav-del-all { display: block; width: 100%; margin-top: 10px; padding: 7px 10px;
+                 border: 1px solid rgba(179,84,63,.45); border-radius: 8px; background: transparent;
+                 color: #b3543f; font-size: 12.5px; cursor: pointer; }
+  .nav-del-all:hover { border-color: #b3543f; background: #fdf3f0; }
+  /* v63：Codex 式历史流——时间分组常驻滚动全量；底部「删除全部」小字；条目右侧时间小字 */
+  .rail-stream { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
+                 gap: 1px; margin-top: 6px; padding-right: 2px; }
+  .rail-time-head { color: var(--muted); font-size: 10.5px; padding: 6px 8px 2px; letter-spacing: .04em; }
+  .rail-entries .rail-entry .entry-time { flex: 0 0 auto; color: var(--muted); font-size: 10.5px; }
+  .rail-del-all { background: transparent; border: none; color: var(--muted); font-size: 11px;
+                  cursor: pointer; text-align: left; padding: 6px 8px 2px; opacity: .75; }
+  .rail-del-all:hover { color: #b3543f; opacity: 1; }
+  #railBottom { display: flex; gap: 6px; margin-top: 8px; flex: 0 0 auto; }
+  #railBottom #navProject { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 8px;
+                            background: transparent; border: none; color: var(--muted); font-size: 15px;
+                            line-height: 1; cursor: pointer; padding: 0; text-align: center; }
+  #railBottom #navProject:hover { background: var(--panel2); color: var(--accent); }
+  #railBottom #navProject.active { background: var(--panel2); color: var(--accent); }
+  #railBottom #settingsEntry { margin-top: 0; }
+  .conv-card { max-width: 860px; margin: 0 auto 12px; }
+  /* v64-P3：Codex 式对话视觉区分——用户消息右对齐蓝气泡；Agent 回复左对齐灰卡 + ✦ 头 */
+  .conv-user { background: var(--accent-soft); border: 1px solid #cfe0f7; border-radius: 12px;
+               padding: 8px 12px; font-size: 12.5px; white-space: pre-wrap; word-break: break-word;
+               width: fit-content; max-width: 85%; margin-left: auto; }
+  .conv-meta { color: var(--muted); font-size: 11px; margin: 2px 0 4px; }
+  .conv-result { border: 1px solid var(--border); border-radius: 12px; background: var(--side);
+                 padding: 10px 12px; font-size: 12.5px; }
+  .conv-result h4 { margin: 2px 0 6px; font-size: 13px; }
+  .conv-banner { border-radius: 8px; padding: 6px 9px; font-size: 11.5px; margin-bottom: 8px; }
+  .conv-banner.demo { color: #7a4d0b; background: #fdf6e3; border: 1px solid #e2c162; }
+  .conv-banner.llm-ok { color: #166534; background: #e7f6ec; border: 1px solid #cdebd6; }
+  .conv-banner.llm-bad { color: #b42318; background: #fef3f2; border: 1px solid #fda29b; }
+  .conv-llm-meta { color: var(--muted); font-size: 11px; border-top: 1px dashed var(--border);
+                   margin-top: 8px; padding-top: 6px; line-height: 1.6; }
+  .conv-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .conv-actions button { background: #fff; border: 1px solid var(--border); border-radius: 8px;
+                         padding: 5px 10px; font-size: 12px; cursor: pointer; color: var(--text); }
+  .conv-actions button:hover { border-color: var(--accent); color: var(--accent); }
+  .conv-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  /* v70：工作结果按钮区——摘要一行 + 按钮清单（服务端派生，按需打开） */
+  .conv-work { margin-top: 8px; padding: 8px 10px; border: 1px solid var(--border);
+               border-radius: 10px; background: #f8fafc; display: flex; flex-direction: column; gap: 6px; }
+  .conv-work-summary { font-size: 12px; color: #475569; line-height: 1.6; }
+  .conv-work-actions { margin-top: 0; }
+  /* v64：Agent 对话卡——正在思考占位 / 错误重试卡 / Agent 回复卡 / 工具过程折叠 */
+  .conv-agent { border: 1px solid var(--border); border-radius: 12px; background: var(--side);
+                padding: 10px 12px; font-size: 12.5px; }
+  .conv-agent-who { color: var(--accent); font-size: 11.5px; font-weight: 600; margin-bottom: 6px; }
+  .conv-agent-reply { line-height: 1.65; word-break: break-word; }
+  .conv-agent-reply .md-p { margin: 2px 0; }
+  .conv-agent-reply .md-h { display: block; font-size: 13px; margin: 8px 0 4px; }
+  .conv-agent-reply .md-quote { border-left: 3px solid var(--border); padding-left: 8px;
+                                color: var(--muted); margin: 4px 0; }
+  .conv-agent-reply .md-gap { height: 6px; }
+  .conv-agent-reply ul { margin: 2px 0 2px 18px; padding: 0; }
+  .conv-agent-reply li { margin: 2px 0; }
+  .conv-agent-reply code { background: #eef2f7; border: 1px solid var(--border); border-radius: 5px;
+                           padding: 0 4px; font-size: 11.5px; }
+  .conv-thinking { border: 1px dashed var(--border); border-radius: 12px; background: var(--side);
+                   padding: 10px 12px; }
+  .conv-thinking-body { color: var(--muted); font-size: 12px; animation: convThinkingPulse 1.6s ease-in-out infinite; }
+  @keyframes convThinkingPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .conv-error { border: 1px solid #fda29b; border-radius: 12px; background: #fff;
+                padding: 10px 12px; }
+  .conv-error .conv-banner.template { color: #7a4d0b; background: #fdf6e3; border: 1px solid #e2c162; }
+  .conv-error-msg { color: #b42318; font-size: 12px; margin: 4px 0 2px; white-space: pre-wrap;
+                    word-break: break-word; }
+  .conv-tool-trace { margin-top: 8px; color: var(--muted); font-size: 11.5px; }
+  .conv-tool-trace summary { cursor: pointer; user-select: none; }
+  /* —— 3D 顶部工具浮层（视角/人体模型/缩放/重置；小窗态隐藏） —— */
+  #stageTools { position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+                z-index: 8; display: flex; align-items: center; gap: 6px;
+                padding: 5px 8px; background: rgba(255, 255, 255, 0.94);
+                border: 1px solid var(--border); border-radius: 12px;
+                box-shadow: 0 4px 18px rgba(17, 24, 39, 0.10); transition: opacity .3s ease; }
+  #stageTools.hidden { opacity: 0; pointer-events: none; }
+  #stageTools button { background: #fff; color: var(--text); border: 1px solid var(--border);
+                       border-radius: 8px; padding: 4px 9px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  #stageTools button:hover { border-color: var(--accent); color: var(--accent); }
+  #viewBtn::after { content: " ▾"; color: var(--muted); }
+  #viewMenu { position: absolute; top: 40px; left: 0; min-width: 118px; background: #fff;
+              border: 1px solid var(--border); border-radius: 10px; padding: 4px; display: none;
+              z-index: 9; box-shadow: 0 10px 36px rgba(17, 24, 39, 0.14); }
+  #viewMenu.open { display: block; }
+  #viewMenu button { display: block; width: 100%; box-sizing: border-box; text-align: left;
+                     background: none; border: none; border-radius: 7px; }
+  /* v59：3D 小窗已删除（两态互斥，无小窗/浮层/遮挡） */
+  #conv-doc-content, .conv-doc-content { font-family: inherit; white-space: pre-wrap;
+      word-break: break-word; background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.65;
+      max-height: 46vh; overflow-y: auto; margin: 6px 0; }
+  #stage { position: absolute; inset: 0; }
+  canvas { display: block; }
+  .drawer { position: absolute; top: 0; bottom: 0; width: 330px; max-width: 88vw; z-index: 6;
+            background: rgba(255, 255, 255, 0.98); display: none; flex-direction: column; }
+  .drawer.left { left: 0; border-right: 1px solid var(--border); }
+  .drawer.right { right: 0; border-left: 1px solid var(--border); }
+  .drawer.open { display: flex; }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between;
+                 padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .drawer-close { background: none; border: none; color: var(--muted); font-size: 15px;
+                  cursor: pointer; padding: 2px 6px; }
+  .drawer-close:hover { color: var(--text); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 8px 12px; }
+
+  /* 已选位置列表（抽屉内，类名保持 verify_3d 契约） */
+  #selList .sel-row { display: flex; align-items: center; gap: 6px; padding: 3px 0;
+                      color: var(--text); font-size: 12px; flex-wrap: wrap; }
+  #selList .sel-label { flex: 1; min-width: 0; word-break: break-all; }
+  #selList .sel-ops { display: flex; gap: 4px; }
+  #selList .sel-del, #selList .sel-ex, #selList .sel-note {
+                      border-radius: 6px; width: 20px; height: 20px; line-height: 1;
+                      cursor: pointer; font-size: 12px; padding: 0; }
+  #selList .sel-del { background: #fdecec; color: #d33; border: 1px solid #f5c6c6; }
+  #selList .sel-del:hover { background: #fadcdc; color: #b91c1c; }
+  #selList .sel-ex { background: #f3f4f6; color: var(--accent); border: 1px solid var(--border); }
+  #selList .sel-note { background: #f3f4f6; color: #15803d; border: 1px solid var(--border); }
+  #selList .sel-detail { flex-basis: 100%; margin: 2px 0 4px; padding: 6px; background: var(--side);
+                         border: 1px solid var(--border); border-radius: 6px; color: #57606a;
+                         font-size: 11px; white-space: pre-wrap; font-family: Menlo, monospace; }
+  .empty { color: var(--muted); font-size: 12px; padding: 8px 2px; }
+  #regionAnnotator { position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+                     z-index: 7; display: none; min-width: 360px; max-width: 90vw;
+                     padding: 8px 10px; background: rgba(255, 255, 255, 0.98);
+                     border: 1px solid #cfe0f7; border-radius: 12px;
+                     box-shadow: 0 8px 30px rgba(17, 24, 39, 0.14); font-size: 12px; }
+  #regionAnnotator.open { display: block; }
+  #regionAnnotator .ra-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  #regionAnnotator select, #regionAnnotator button { background: #fff; color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; padding: 4px 7px; font-size: 12px; }
+  #regionAnnotator button { cursor: pointer; }
+  #regionAnnotator button:hover { background: var(--panel2); }
+  #regionAnnotator button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #regionAnnotator button.primary:hover { background: #1a5fd0; }
+  #regionAnnotator button.danger { background: #fff; border-color: #f1b3b7; color: var(--danger); }
+  #regionAnnotator .ra-status { color: #b45309; margin-right: 4px; }
+  #regionAnnotator .ra-count { color: var(--accent); }
+  #llmReviewDrawer { position: absolute; right: 0; top: 0; bottom: 0; width: 360px; max-width: 88vw; z-index: 6;
+      background: rgba(255, 255, 255, 0.98); border-left: 1px solid var(--border); display: none; flex-direction: column; }
+  #llmReviewDrawer.open { display: flex; }
+  #llmReviewList { flex: 1; overflow: auto; padding: 8px 12px; }
+  /* —— 阶段3：医生资料抽屉（＋菜单唯一入口） —— */
+  #clinicDrawer { position: absolute; right: 0; top: 0; bottom: 0; width: 400px; max-width: 92vw; z-index: 6;
+      background: rgba(255, 255, 255, 0.98); border-left: 1px solid var(--border); display: none; flex-direction: column; }
+  #clinicDrawer.open { display: flex; }
+  #clinicForm, #assistForm { flex: 1; overflow: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .clinic-sec { border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+  .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 6px; }
+  .patient-grid input, .patient-grid select { font-size: 12px; padding: 5px 8px; border: 1px solid var(--border);
+    border-radius: 8px; background: #fff; color: var(--text); box-sizing: border-box; width: 100%; }
+  .patient-grid input:focus, .patient-grid select:focus { outline: none; border-color: var(--accent); }
+  .patient-grid input[readonly] { background: var(--side); color: var(--muted); }
+  .clinic-sec>b { font-size: 12px; display: block; margin-bottom: 5px; }
+  .clinic-sec textarea, .clinic-sec input[type="text"] { width: 100%; box-sizing: border-box;
+      border: 1px solid var(--border); border-radius: 6px; padding: 5px 6px; font-size: 12px;
+      font-family: inherit; color: var(--text); background: #fff; }
+  .clinic-sec textarea { resize: vertical; min-height: 38px; }
+  .clinic-sec .sec-btn { background: #f3f4f6; border: 1px solid var(--border); border-radius: 6px;
+      padding: 3px 8px; cursor: pointer; font-size: 11.5px; margin-top: 4px; }
+  .clinic-sec .sec-btn:hover { background: var(--panel2); }
+  .lab-row { display: flex; gap: 5px; margin-bottom: 5px; }
+  .lab-row input { flex: 1; min-width: 0; }
+  .lab-row .lab-del { flex: 0 0 24px; background: #f3f4f6; border: 1px solid var(--border);
+      border-radius: 6px; cursor: pointer; color: var(--muted); }
+  .img-item { font-size: 11.5px; padding: 3px 0; border-bottom: 1px dashed var(--border); }
+  .img-item.ready { color: #067647; }
+  .img-item.rejected { color: #b42318; }
+  #clinicStatus, #assistStatus { color: var(--muted); font-size: 11.5px; padding: 0 12px 6px; min-height: 16px; }
+  /* —— §16.1 设置入口：左侧栏最底部齿轮（参考图布局；与原生窗口「⚙ 设置」共享同一套数据） —— */
+  #settingsEntry { margin-top: 8px; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 8px;
+    background: transparent; border: none; color: var(--muted); font-size: 16px; line-height: 1;
+    cursor: pointer; padding: 0; text-align: center; }
+  #settingsEntry:hover { background: var(--panel2); color: var(--accent); }
+  /* v45：独立全屏设置界面（左侧导航 + 右侧卡片内容区，参照桌面应用设置页） */
+  #settingsDrawer { position: fixed; inset: 0; z-index: 60;
+    background: #f7f7f8; display: none; flex-direction: row; }
+  #settingsDrawer.open { display: flex; }
+  #settingsNav { width: 250px; flex: 0 0 250px; box-sizing: border-box; padding: 14px 12px;
+    border-right: 1px solid var(--border); background: #fff; display: flex; flex-direction: column;
+    gap: 3px; overflow-y: auto; }
+  .settings-back { text-align: left; background: none; border: none; color: var(--text);
+    font-size: 13px; font-weight: 500; cursor: pointer; padding: 7px 9px; border-radius: 8px;
+    margin-bottom: 8px; }
+  .settings-back:hover { background: var(--panel2); }
+  .nav-group { font-size: 11px; color: var(--muted); padding: 6px 9px 4px; letter-spacing: .04em; }
+  .nav-item { text-align: left; background: none; border: none; color: var(--text); font-size: 13px;
+    padding: 8px 9px; border-radius: 8px; cursor: pointer; }
+  .nav-item:hover { background: var(--panel2); }
+  .nav-item.active { background: var(--panel2); color: var(--accent); font-weight: 600; }
+  #settingsContent { flex: 1; overflow-y: auto; padding: 34px 44px; }
+  .settings-pane { display: none; max-width: 820px; }
+  .settings-pane.active { display: block; }
+  .pane-title { font-size: 22px; font-weight: 600; margin: 0 0 16px; color: var(--text); }
+  .pane-card { background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 14px; }
+  .settings-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .settings-line { font-size: 11.5px; color: var(--muted); line-height: 1.6; }
+  .kb-status { color: var(--muted); font-size: 11.5px; min-height: 16px; margin-bottom: 6px; }
+  /* v72：导入进度条 + 逐本结果（用户要求可见的导入反馈） */
+  .kb-progress { margin-bottom: 8px; }
+  .kb-progress-head { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
+  .kb-progress-head span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kb-progress-head span:last-child { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .kb-progress-bar { height: 8px; border-radius: 5px; background: var(--border); overflow: hidden; }
+  .kb-progress-fill { height: 100%; width: 0%; border-radius: 5px; background: linear-gradient(90deg, #4f8ef7, #6fb1ff); transition: width .35s ease; }
+  .kb-progress-fill.indeterminate { width: 100% !important; transition: none; opacity: .45; animation: kbPulse 1.1s ease-in-out infinite; }
+  @keyframes kbPulse { 0%, 100% { opacity: .25; } 50% { opacity: .7; } }
+  .kb-result { margin-top: 6px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; font-size: 11.5px; }
+  .kb-result-head { font-weight: 600; margin-bottom: 3px; }
+  .kb-result-head.ok { color: #1a7f37; }
+  .kb-result-head.bad { color: #c62828; }
+  .kb-result-line { line-height: 1.55; word-break: break-all; }
+  .kb-result-line.ok { color: #1a7f37; }
+  .kb-result-line.bad { color: #c62828; }
+  .kb-result-line.skip { color: var(--muted); }
+  .kb-item { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin-bottom: 6px; }
+  .kb-item.kb-del { opacity: .62; }
+  .kb-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .kb-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kb-meta { font-size: 11px; color: var(--muted); margin: 3px 0; }
+  .kb-actions { display: flex; gap: 6px; }
+  .kb-actions button { font-size: 11px; padding: 2px 8px; }
+  /* v71：物理删除按钮——与软删（停止检索）区分，警示色 */
+  .kb-actions button:last-child { color: #b23b3b; }
+  .kb-actions button:last-child:hover { background: #fdeaea; border-color: #e5b4b4; }
+  .kb-pill { font-size: 10.5px; padding: 1px 7px; border-radius: 9px; background: var(--panel2);
+    color: var(--muted); white-space: nowrap; flex: none; }
+  .kb-pill.ready { color: #166534; background: #e7f6ec; }
+  .kb-pill.failed { color: #a33; background: #fdeaea; }
+  .kb-pill.quarantined { color: #92400e; background: #fdf3e0; }
+  .kb-actions-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .llm-input { width: 100%; box-sizing: border-box; margin: 4px 0; font-size: 12px; padding: 5px 8px;
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: #fff; }
+  .llm-input:focus { outline: none; border-color: var(--accent); }
+  .lang-opt { display: flex; gap: 6px; align-items: center; font-size: 12px; padding: 2px 0; cursor: pointer; }
+  #settingsDisclaimer { font-size: 11.5px; line-height: 1.5; color: #7a4d0b; background: #fdf6e3;
+    border: 1px solid #f2e2bb; border-radius: 8px; padding: 6px 8px; }
+  /* —— 阶段4：医生辅助判断面板（资料选择/参考病例确认/脱敏预览） —— */
+  #assistDrawer { position: absolute; right: 0; top: 0; bottom: 0; width: 420px; max-width: 94vw; z-index: 6;
+      background: rgba(255, 255, 255, 0.98); border-left: 1px solid var(--border); display: none; flex-direction: column; }
+  #assistDrawer.open { display: flex; }
+  #assistSel label, #assistRefs label { display: flex; gap: 6px; align-items: flex-start;
+      font-size: 12px; padding: 3px 0; color: var(--text); cursor: pointer; }
+  #assistSel .sel-meta, #assistRefs .sel-meta { color: var(--muted); font-size: 11px; }
+  #assistRefs label.unconfirmed { color: var(--muted); }
+  /* —— 阶段5：诊断辅助/临床建议/审核与审计三区 —— */
+  #assistDisclaimer { font-size: 11.5px; line-height: 1.5; color: #7a4d0b; background: #fdf6e3;
+      border: 1px solid #e2c162; border-radius: 8px; padding: 7px 9px; }
+  .dx-card { border: 1px solid var(--border); border-left: 3px solid #2563eb; border-radius: 8px;
+      padding: 7px 9px; margin-bottom: 7px; font-size: 12px; }
+  .dx-head { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+  .dx-name { font-weight: 600; }
+  .dx-conf { font-size: 10.5px; color: #1d4ed8; background: #eef2ff; border: 1px solid #c7d2fe;
+      border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+  .dx-conf.unknown { color: #57606a; background: #f3f4f6; border-color: var(--border); }
+  .dx-ev { color: var(--text); font-size: 11.5px; margin: 2px 0 2px 10px; }
+  .dx-ev .cite-id { color: #b45309; font-size: 10.5px; margin-left: 4px; }
+  .dx-sub { color: #b42318; font-size: 11.5px; margin: 2px 0 2px 10px; }
+  .dx-missing { color: #7a4d0b; font-size: 11.5px; margin: 2px 0 2px 10px; }
+  .adv-item { font-size: 12px; padding: 4px 0; border-bottom: 1px dashed var(--border); }
+  .adv-item:last-child { border-bottom: none; }
+  .adv-item .adv-meta { color: var(--muted); font-size: 11px; }
+  .adv-item .adv-flag { color: #7a4d0b; font-size: 11px; }
+  .rf-banner { color: #b42318; background: #fef3f2; border: 1px solid #fda29b; border-radius: 8px;
+      padding: 6px 9px; font-size: 11.5px; margin-bottom: 7px; }
+  .audit-row { font-size: 11.5px; padding: 2px 0; display: flex; gap: 6px; }
+  .audit-row .k { color: var(--muted); flex: 0 0 84px; }
+  .pending-pill { font-size: 10.5px; color: #7a4d0b; background: #fdf6e3; border: 1px solid #e2c162;
+      border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+  .llm-card { border: 1px solid var(--border); border-radius: 10px; padding: 7px; margin-bottom: 7px; }
+  .llm-card.pending { border-color: #e2c162; }
+  .llm-card .llm-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .llm-card button { margin: 6px 4px 0 0; background: #f3f4f6; color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; cursor: pointer; }
+  .llm-card button:hover { background: var(--panel2); }
+  /* —— LLM 多连接管理（设置页；与上方分析 llm-card 隔离） —— */
+  .llm-pane-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px; }
+  .llm-pane-head .pane-title { margin-bottom:4px; }
+  .llm-primary-btn { background:#1683f7 !important; color:#fff !important; border-color:#1683f7 !important; }
+  .llm-connection-list { display:flex; flex-direction:column; gap:12px; }
+  .llm-connection-empty { padding:32px; text-align:center; color:var(--muted); border:1px dashed var(--border); border-radius:14px; }
+  .llm-connection-card { min-height:96px; display:flex; align-items:center; gap:16px; border:1px solid var(--border);
+      border-radius:14px; padding:16px 18px; background:#fff; transition:border-color .15s, box-shadow .15s; }
+  .llm-connection-card.active { border:2px solid #1683f7; box-shadow:0 2px 8px rgba(22,131,247,.08); }
+  .llm-provider-icon { width:46px; height:46px; flex:0 0 46px; border-radius:12px; display:flex; align-items:center;
+      justify-content:center; font-size:22px; font-weight:700; color:#52606d; background:#f5f7fa; border:1px solid var(--border); }
+  .llm-provider-icon.deepseek { color:#465cff; background:#f1f3ff; }
+  .llm-provider-icon.zhipu { color:#315efb; background:#eef4ff; }
+  .llm-connection-info { min-width:0; flex:1; }
+  .llm-connection-name { font-size:17px; font-weight:650; color:var(--text); margin-bottom:5px; }
+  .llm-connection-url { color:#1683f7; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .llm-connection-meta { color:var(--muted); font-size:11.5px; margin-top:5px; }
+  .llm-connection-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; flex-wrap:wrap; }
+  .llm-connection-actions button { border:1px solid var(--border); background:#fff; color:var(--text); border-radius:9px;
+      padding:7px 10px; cursor:pointer; }
+  .llm-connection-actions button:hover { background:#f5f7fa; }
+  .llm-connection-actions .use { background:#1683f7; color:#fff; border-color:#1683f7; }
+  .llm-active-pill { color:#1683f7; background:#edf6ff; border-radius:999px; padding:5px 9px; font-size:11px; }
+  .llm-editor { margin-top:14px; }
+  .llm-field-label, .llm-clear-key { display:block; font-size:12px; color:var(--muted); margin:7px 0 3px; }
+
+  /* —— v58：一行简洁状态文字（取代流程步骤条） —— */
+  #statusLine { color: var(--muted); font-size: 11.5px; padding: 0 4px 6px; line-height: 1.5;
+                min-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #statusLine.busy { color: var(--accent); }
+  #statusLine.warn { color: #b42318; }
+  #statusLine.ok { color: #166534; }
+  #flowGuide { position: fixed; inset: 0; z-index: 70; background: rgba(17, 24, 39, 0.42);
+               display: none; align-items: center; justify-content: center; }
+  #flowGuide.open { display: flex; }
+  .flow-guide-card { width: 480px; max-width: 92vw; max-height: 84vh; overflow: auto; background: #fff;
+                     border-radius: 14px; box-shadow: 0 18px 60px rgba(17, 24, 39, 0.28); }
+  .flow-guide-head { display: flex; justify-content: space-between; align-items: center;
+                     padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .flow-guide-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px;
+                     font-size: 12.5px; }
+  #flowGuideState { color: var(--accent); font-weight: 600; }
+  #flowGuideText { white-space: pre-wrap; color: var(--text); line-height: 1.6; }
+  #flowGuideMissing { display: none; flex-wrap: wrap; gap: 5px; }
+  .miss-chip { font-size: 11.5px; color: #7a4d0b; background: #fdf6e3; border: 1px solid #e2c162;
+               border-radius: 999px; padding: 2px 9px; }
+  #flowGuideInput { width: 100%; box-sizing: border-box; border: 1px solid var(--border);
+                    border-radius: 8px; padding: 7px 8px; font-size: 12.5px; font-family: inherit;
+                    resize: vertical; min-height: 64px; color: var(--text); background: #fff; display: none; }
+  #flowGuideInput:focus { outline: none; border-color: var(--accent); }
+  .flow-guide-actions { display: none; gap: 8px; }
+  .flow-guide-actions button { border-radius: 8px; padding: 6px 14px; font-size: 12.5px; cursor: pointer;
+                               border: 1px solid var(--border); background: #f3f4f6; color: var(--text); }
+  .flow-guide-actions button:hover { background: var(--panel2); }
+  #flowGuideSend { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff; }
+  #flowGuideSend:hover { background: #1a5fd0 !important; }
+  #flowGuideOpenAssist { display: none !important; align-self: flex-start; border-radius: 8px; padding: 6px 14px;
+                         font-size: 12.5px; cursor: pointer; border: 1px solid var(--accent);
+                         background: var(--accent); color: #fff; }
+  #flowGuideHint { color: var(--muted); font-size: 11.5px; line-height: 1.55; }
+
+  /* —— 底部统一输入框（浅色圆角卡） —— */
+  #composer { background: var(--bg); border-top: 1px solid #f0f1f3; padding: 10px 14px 12px; }
+  /* 位置标签最多约 3 行，超出内部滚动——防止点多了把 3D 视口顶没（v31 反馈） */
+  #chipsRow { display: none; flex-wrap: wrap; gap: 6px; padding: 2px 4px 8px;
+              max-height: 96px; overflow-y: auto; }
+  #chipsRow::-webkit-scrollbar { width: 6px; }
+  #chipsRow::-webkit-scrollbar-thumb { background: #d3d7dd; border-radius: 3px; }
+  #chipsRow::-webkit-scrollbar-track { background: transparent; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--side);
+          border: 1px solid var(--border); border-radius: 8px; padding: 3px 6px;
+          font-size: 12px; max-width: 100%; }
+  .chip b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip .x { background: none; border: none; color: var(--muted); cursor: pointer;
+             font-size: 13px; padding: 0 2px; line-height: 1; }
+  .chip .x:hover { color: var(--danger); }
+  .chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger);
+              display: inline-block; flex: 0 0 auto; }
+  .chip-file b { color: var(--accent); }
+  .composer-row { display: flex; align-items: flex-end; gap: 6px; position: relative;
+                  background: var(--side); border: 1px solid var(--border); border-radius: 18px;
+                  padding: 6px 8px; }
+  .composer-row:focus-within { background: #fff; border-color: #c9ddf7;
+                               box-shadow: 0 2px 10px rgba(31, 111, 235, 0.08); }
+  #plusBtn { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: transparent;
+             border: none; color: #57606a; font-size: 18px; cursor: pointer; }
+  #plusBtn:hover { background: var(--panel2); }
+  #plusMenu { position: absolute; bottom: 44px; left: 0; width: 216px; background: #fff;
+              border: 1px solid var(--border); border-radius: 12px; padding: 5px; display: none;
+              z-index: 9; box-shadow: 0 10px 36px rgba(17, 24, 39, 0.14); }
+  #plusMenu.open { display: block; }
+  #plusMenu button { display: flex; width: 100%; text-align: left; background: none; border: none;
+                     color: var(--text); padding: 7px 8px; font-size: 12.5px; border-radius: 8px;
+                     cursor: pointer; gap: 8px; align-items: center; }
+  #plusMenu button:hover { background: var(--panel2); }
+  #plusMenu button.toggled { color: var(--accent); }
+  #chatInput { flex: 1; background: transparent; border: none; color: var(--text);
+               padding: 7px 4px; font-size: 13px; resize: none;
+               min-height: 32px; max-height: 160px; line-height: 1.5; font-family: inherit; }
+  #chatInput:focus { outline: none; }
+  #sendBtn { width: 32px; height: 32px; min-width: 32px; padding: 0; border-radius: 50%; flex: 0 0 auto;
+             background: #1a1a1a; border: none; color: #fff; font-size: 14px; cursor: pointer; }
+  #sendBtn:hover { background: #000; }
+  #sendBtn:disabled { background: #e5e7eb; color: #adb2bb; cursor: default; }
+  /* v74：生成中 → 停止按钮（深色圆 + 白色方点） */
+  #sendBtn .stop-sq { display: block; width: 11px; height: 11px; margin: 0 auto;
+                      border-radius: 2.5px; background: #fff; }
+  #composer.drag { outline: 2px dashed var(--accent); outline-offset: -6px; border-radius: 18px; }
+
+  /* 历史消息卡 */
+  .msg-card { border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px;
+              margin-bottom: 8px; background: var(--side); font-size: 12px; }
+  .msg-card .msg-time { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+  .msg-card .msg-text { margin-bottom: 4px; white-space: pre-wrap; word-break: break-all; }
+  .msg-card .msg-region { color: #b45309; margin: 2px 0; }
+  .msg-card .msg-file { color: var(--accent); }
+  .msg-card details { margin-top: 4px; }
+  .msg-card details pre { background: #fff; border: 1px solid var(--border); border-radius: 6px;
+                          padding: 6px; font-size: 10.5px; white-space: pre-wrap;
+                          word-break: break-all; color: #57606a; max-height: 200px; overflow: auto; }
+  .msg-card summary { cursor: pointer; color: var(--muted); font-size: 11px; }
+
+  @media (max-width: 900px) {
+    #regionLabel { display: none; }
+    #toolbar { width: 140px; flex-basis: 140px; }
+    #stageTools { max-width: 94%; flex-wrap: wrap; }
+    .drawer { width: 82vw; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <span class="brand">肤智 DermAgent</span>
+    <button class="rail-item active" id="navNew" data-nav="new" title="创建新的空白病例会话（清空当前输入与选点，不删除历史）">🆕 新对话</button>
+    <!-- v63：Codex 式对话历史流——服务端病例按时间分组（今天/昨天/更早）常驻滚动全量，条目点击续办、行尾🗑；流底部「删除全部病例」 -->
+    <div class="rail-stream" id="railHistGroup">
+      <div class="rail-entries" id="railHistEntries"></div>
+    </div>
+    <button id="openSelDrawer" title="已选位置列表（右侧抽屉）">已选 <span id="selCount">0</span></button>
+    <button id="openHistDrawer" title="历史病历：全部已产生的病历（对话产生、诊断产生、手动填写）">历史病历</button>
+    <div id="railBottom">
+      <button id="settingsEntry" title="⚙ 设置：语言 / LLM 连接 / 知识库 / RAG 运行 / 3D 高级工具 / 版本与安全（与原生窗口共享同一套数据）">⚙</button>
+    </div>
+  </div>
+  <div id="main-col">
+  <!-- v69：工作区标题栏——当前工作区与当前病例标识始终可见，「返回对话」常驻。
+       对话永远是默认主工作区；病例/3D 是同一主界面内可切换的工作区，不是遮挡对话的弹窗。 -->
+  <div id="wsBar">
+    <span id="wsTitle">💬 对话工作区</span>
+    <span id="wsCaseId" title="当前病例 ID：导航、工具调用与病例数据始终绑定同一病例，不会跳到旧病例">未关联病例</span>
+    <span id="wsFlex"></span>
+    <button id="clinicEntry" title="填写/查看门诊病历单（保留隐藏元素供初始化绑定）" style="display:none">📋 病历单</button>
+    <button id="wsPanelToggle" title="打开 / 关闭病历单面板" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;padding:0;background:#fff;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="8.8" y="4.2" width="4.4" height="7.6" rx="1.2" fill="currentColor" opacity="0.5"/></svg>
+    </button>
+  </div>
+  <div id="workstage">
+  <div id="stage-wrap">
+    <div id="stage"></div>
+    <div id="stageTools" title="视角 / 人体模型 / 缩放（切换视角与模型不会丢失已选部位与病例状态）">
+      <button id="btnBackToChat" class="primary" title="完成选点，返回 Agent 对话（选中部位作为可选上下文随身携带）">✅ 完成并返回对话</button>
+      <button id="viewBtn" title="切换视角：前 / 后 / 左 / 右 / 重置">视角</button>
+      <div id="viewMenu">
+        <button data-view="front" title="前视图">前视图</button>
+        <button data-view="back" title="后视图">后视图</button>
+        <button data-view="left" title="左视图">左视图</button>
+        <button data-view="right" title="右视图">右视图</button>
+        <button data-view="reset" title="重置视角（含底视复位）">重置视角</button>
+      </div>
+      <select id="modelSelect" title="切换人体模型（男/女）；已选部位与坐标保留"></select>
+      <button id="lassoBtn" title="自选区域：在模型表面按住涂抹，松开后自动识别位置范围（再次点击退出）">✏️ 涂抹</button>
+      <button id="zoomOut" title="缩小（远离模型）">－</button>
+      <button id="zoomIn" title="放大（靠近模型）">＋</button>
+      <button id="resetCam" title="重置视角与缩放">重置</button>
+    </div>
+    <div id="regionAnnotator" aria-live="polite">
+      <div class="ra-row">
+        <span class="ra-status" id="raStatus">人工区域：点击模型表面添加红色边界点</span>
+        <span class="ra-count" id="raCount">0 点 · 0 面</span>
+        <button id="raUndo" title="撤销最后一个边界点">撤销点</button>
+        <button id="raFinish" class="primary" title="闭合边界并保存人工区域">完成标注</button>
+        <button id="raCancel" class="danger" title="取消当前区域">取消</button>
+      </div>
+      <div class="ra-row" style="margin-top:6px">
+        <label for="raLabel">标准部位</label>
+        <select id="raLabel">
+          <option value="">完成边界后选择</option>
+          <option value="head_face">头面部</option><option value="neck">颈部</option>
+          <option value="chest">胸部</option><option value="abdomen">腹部</option>
+          <option value="back_upper">上背</option><option value="back_lower">下背</option>
+          <option value="shoulder_l">左肩</option><option value="shoulder_r">右肩</option>
+          <option value="upper_arm_l">左上臂</option><option value="upper_arm_r">右上臂</option>
+          <option value="elbow_l">左肘</option><option value="elbow_r">右肘</option>
+          <option value="forearm_l">左前臂</option><option value="forearm_r">右前臂</option>
+          <option value="wrist_l">左腕</option><option value="wrist_r">右腕</option>
+          <option value="hand_l">左手</option><option value="hand_r">右手</option>
+          <option value="thigh_l">左大腿</option><option value="thigh_r">右大腿</option>
+          <option value="knee_l">左膝</option><option value="knee_r">右膝</option>
+          <option value="calf_l">左小腿</option><option value="calf_r">右小腿</option>
+          <option value="foot_l">左足</option><option value="foot_r">右足</option>
+        </select>
+        <label style="margin-left:10px" title="勾选后：同标准部位已有区域时，本次圈选作为新视角追加（面集并集、版本+1）；不勾则新建区域"><input type="checkbox" id="raAppend" checked> 追加视角</label>
+        <button id="raExport" title="导出人工区域 JSON（含模型指纹与历史，Qt 端选择保存位置）">导出区域</button>
+        <button id="llmBatch" title="仅对已确认人工区域批量生成精细子区域">批量生成精细部分</button>
+        <button id="llmReview" title="查看并审核 LLM 生成结果">审核精细结果</button>
+      </div>
+    </div>
+    <aside id="llmReviewDrawer">
+      <div class="drawer-head"><b id="llmReviewTitle">🧠 LLM 精细结果审核</b><button class="drawer-close" id="llmReviewClose" title="关闭">×</button></div>
+      <div id="llmReviewList"><div class="empty">尚无生成结果</div></div>
+    </aside>
+    <aside id="histDrawer" class="drawer left">
+      <div class="drawer-head"><b id="histTitle">🕘 历史对话</b><button class="drawer-close" id="histDrawerClose" title="关闭">×</button></div>
+      <div id="histList" class="drawer-body"><div class="empty">提交病例后，这里显示本次会话的结构化消息记录</div></div>
+    </aside>
+    <aside id="selDrawer" class="drawer right">
+      <div class="drawer-head"><b id="selTitle">📋 已选位置</b><button class="drawer-close" id="selDrawerClose" title="关闭">×</button></div>
+      <div id="selList" class="drawer-body"></div>
+    </aside>
+  </div><!-- /stage-wrap -->
+  <div id="convPane" aria-live="polite">
+    <div id="convLog"></div>
+  </div>
+  <div id="navPane">
+    <div class="nav-pane-head"><b id="navPaneTitle"></b>
+      <button id="navPaneClose" title="返回主界面">← 返回</button></div>
+    <div id="navPaneBody"></div>
+  </div>
+  <!-- v66：右侧门诊病历面板（与对话同屏三栏；宽 38%，不遮挡消息与输入框） -->
+  <aside id="casePanel" aria-live="polite">
+    <div id="cpBanner" style="display:none"></div>
+    <div id="cpHead">
+      <div class="cp-title-row">
+        <b class="cp-title">🩺 皮肤科门诊病历</b>
+        <span class="cp-flex"></span>
+        <button id="cpClose" title="收起病例面板（对话、病例状态与 3D 已选部位均不丢失）">✕</button>
+      </div>
+      <div class="cp-meta-line">
+        <span title="病例编号（与左侧对话共享同一 case_id）">编号 <b id="cpCaseId">—</b></span>
+        <span>创建 <span id="cpCreated">—</span></span>
+        <span>更新 <span id="cpUpdated">—</span></span>
+        <span id="cpStatusTag" class="cp-status-tag" data-state="pending_review">—</span>
+      </div>
+      <div class="cp-actions">
+        <button id="cpEditBtn" title="进入编辑模式（仅修改过的字段会在保存时提交，不覆盖 AI 新内容）">✏️ 编辑</button>
+        <button id="cpSaveBtn" class="cp-primary" title="保存修改为草稿（对话不自动重写整份病例）">💾 保存</button>
+        <button id="cpModelBtn" title="打开 3D 人体模型选择患处；完成后返回本病历单">🧍 选择人体部位</button>
+        <button id="cpConfirmBtn" class="cp-ok" title="医生确认本份病例（确认后才能导出正式病历单）">✅ 医生确认</button>
+        <div class="cp-more-wrap">
+          <button id="cpMoreBtn" title="更多操作：重新生成 / 历史版本 / 导出 / 拒绝">更多 ▾</button>
+          <div id="cpMoreMenu">
+            <button id="cpRegenBtn" title="对当前光标所在字段重新调用 AI 生成（LLM 未连接时不可用）">🔄 重新生成当前字段</button>
+            <button id="cpHistoryBtn" title="查看每个字段的修改记录（保留前后版本，不覆盖历史）">🕘 查看历史版本</button>
+            <button id="cpExportBtn" title="导出正式病历单（导出前必须医生确认）" disabled>📄 导出病历单（需先医生确认）</button>
+            <button id="cpRejectBtn" class="cp-danger" title="标记本份病例为已拒绝（不影响对话与 3D 选点）">🚫 标记为已拒绝</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="cpBody">
+      <div id="cpEmpty" class="cp-empty"></div>
+      <div id="cpFields"></div>
+      <div id="cpMoreGroupHead" class="cp-group-head" style="display:none">更多病历字段 ▸</div>
+      <div id="cpMoreFields" style="display:none"></div>
+      <div id="cpCitations" class="cp-cites" style="display:none"></div>
+      <div id="cpDisclaimer" class="cp-disclaimer"></div>
+    </div>
+    <div id="cpFooter">
+      <button id="cpBackBtn" title="收起病例面板，回到对话（病例数据保留，可随时重新打开）">← 返回 Agent 对话</button>
+      <button id="cpSaveBtn2" class="cp-primary" title="保存修改为草稿">保存草稿</button>
+      <button id="cpConfirmBtn2" class="cp-ok" title="医生确认本份病例">医生确认</button>
+    </div>
+    <div id="cpHistoryLayer">
+      <div class="cph-box">
+        <div class="cph-head"><b>🕘 修改记录（保留前后版本）</b><button id="cphClose" title="关闭">✕</button></div>
+        <div id="cphList"></div>
+      </div>
+    </div>
+  </aside>
+  </div><!-- /workstage -->
+  <div id="composer">
+    <div id="statusLine" aria-live="polite">等待医生输入</div>
+    <div id="chipsRow"></div>
+    <div class="composer-row">
+      <button id="plusBtn" title="更多功能">＋</button>
+      <div id="plusMenu">
+        <button id="addImage" title="添加皮肤照片附件（png/jpg/webp）">📎 图片附件</button>
+        <button id="ctxCompressBtn" title="把当前对话较早内容压缩为结构化摘要（原始记录保留；也可在输入框直接发「压缩上下文」）">🧹 压缩上下文</button>
+        <button id="assistEntry" title="医生辅助判断（入口已移除，保留隐藏元素供初始化绑定）" style="display:none">🧠 医生辅助判断</button>
+        <button id="shot" title="当前 3D 视图截图，存入报告附件">📷 截图入报告</button>
+        <button id="clearSel" title="删除全部已选位置与 3D 标记（需确认）">🗑 清空全部标记</button>
+        <button id="menuSelDrawer" title="打开/关闭已选位置抽屉">📋 已选位置列表</button>
+      </div>
+      <textarea id="chatInput" rows="1"
+        placeholder="描述症状或问题（可同时附加 3D 选点与图片）… Enter 发送 · Shift+Enter 换行"></textarea>
+      <select id="llmModelSelect" title="切换 LLM 大模型（保存到本机服务端配置，密钥保持不变）"></select>
+      <select id="llmThinkingSelect" title="思考等级（低/中/高；标准=不传思考参数。写入本机服务端配置）"></select>
+      <button id="sendBtn" title="发送（Enter）" disabled>↑</button>
+    </div>
+    <input type="file" id="imgFile" accept=".png,.jpg,.jpeg,.webp" multiple style="display:none">
+    <input type="file" id="glbFile" accept=".glb" style="display:none">
+    <input type="file" id="reportFile" accept=".txt,.md,.markdown,.html,.htm" style="display:none">
+    <input type="file" id="clinicImgFile" accept=".png,.jpg,.jpeg,.webp,.bmp,.gif" multiple style="display:none">
+    <div id="flowGuide" role="dialog" aria-modal="true" aria-live="polite">
+      <div class="flow-guide-card">
+        <div class="flow-guide-head"><b id="flowGuideTitle">🧭 下一步操作指引</b>
+          <button class="drawer-close" id="flowGuideClose" title="关闭">×</button></div>
+        <div class="flow-guide-body">
+          <div id="flowGuideState"></div>
+          <div id="flowGuideText"></div>
+          <div id="flowGuideMissing"></div>
+          <textarea id="flowGuideInput" rows="3"></textarea>
+          <div class="flow-guide-actions" id="flowGuideActions">
+            <button id="flowGuideSend">发送补充</button>
+            <button id="flowGuideLater">稍后自己填</button>
+          </div>
+          <button id="flowGuideOpenAssist">打开审核面板</button>
+          <div id="flowGuideHint"></div>
+        </div>
+      </div>
+    </div>
+    <aside id="clinicDrawer" aria-live="polite">
+      <div class="drawer-head"><b id="clinicTitle">📋 门诊病历单（随下一条消息提交）</b>
+        <button class="sec-btn" id="clinic3dBtn" title="打开 3D 人体模型选择部位（完成后自动填入本病历单）">🧍 选择人体部位</button>
+        <button class="drawer-close" id="clinicClose" title="关闭">×</button></div>
+      <div id="clinicForm">
+        <div class="clinic-sec"><b id="clinicSecPatient">患者基本信息</b>
+          <div class="patient-grid">
+            <input id="clinicPatName" placeholder="姓名" autocomplete="off">
+            <select id="clinicPatSex" title="性别">
+              <option value="">性别：未提供</option>
+              <option value="女">女</option>
+              <option value="男">男</option>
+              <option value="其他">其他</option>
+            </select>
+            <input id="clinicPatAge" placeholder="年龄（如 34）" autocomplete="off" inputmode="numeric">
+            <input id="clinicPatNo" placeholder="门诊号（留空自动生成）" autocomplete="off">
+            <input id="clinicPatDate" readonly title="就诊日期（自动）">
+          </div>
+        </div>
+        <div class="clinic-sec"><b>身体部位</b>
+          <input id="clinicRegions" placeholder="未选择——点上方「🧍 选择人体部位」3D 选择，或手动填写" autocomplete="off"></div>
+        <div class="clinic-sec"><b id="clinicSecHx">主诉 / 现病史</b>
+          <textarea id="clinicHx" placeholder="主诉、现病史、皮损观察记录…"></textarea></div>
+        <div class="clinic-sec"><b id="clinicSecMeds">既往史 / 过敏史 / 用药 / 当前治疗</b>
+          <textarea id="clinicPast" placeholder="既往史、家族史…"></textarea>
+          <textarea id="clinicAllergy" placeholder="药物/食物/接触过敏史…"></textarea>
+          <textarea id="clinicMeds" placeholder="当前与近期用药（名称/剂量/频次）…"></textarea>
+          <textarea id="clinicTx" placeholder="当前治疗（外用/系统治疗/光疗等）…"></textarea></div>
+        <div class="clinic-sec"><b id="clinicSecLab">辅助检查 · 结构化检验</b>
+          <div id="labRows"></div>
+          <button class="sec-btn" id="labAddRow" title="增加一行检验项目">＋ 加一行</button></div>
+        <div class="clinic-sec"><b id="clinicSecReport">辅助检查 · 报告文字导入</b>
+          <textarea id="clinicReport" placeholder="粘贴检验/病理/影像报告文字，或从 .txt/.md/.html 导入"></textarea>
+          <button class="sec-btn" id="clinicReportImport" title="从文本文件导入报告（≤2MB）">导入报告文件</button></div>
+        <div class="clinic-sec"><b id="clinicSecImg">查体影像（png/jpg/webp/bmp/gif，≤10MB，逐张验证完整性）</b>
+          <button class="sec-btn" id="clinicImgAdd" title="选择影像文件；不支持或无法验证的格式会被安全拒绝">添加影像</button>
+          <div id="clinicImaging"><div class="empty" id="imgEmpty">尚无影像</div></div></div>
+        <button class="sec-btn" id="clinicClear" title="清空全部医生资料（需确认）">🗑 清空资料</button>
+        <button class="sec-btn" id="clinicSaveNext" title="保存病历单内容并随消息提交给智能体，进入下一步（情况补充/分析）"
+                style="background:var(--accent);color:#fff;border-color:var(--accent)">✅ 保存确认 · 进入下一步</button>
+      </div>
+      <div id="clinicStatus"></div>
+    </aside>
+    <aside id="assistDrawer" aria-live="polite">
+      <div class="drawer-head"><b id="assistTitle">🧠 医生辅助判断</b><button class="drawer-close" id="assistClose" title="关闭">×</button></div>
+      <div id="assistForm">
+        <div class="clinic-sec"><b id="assistSecBoundary">AI 辅助建议边界（常显）</b>
+          <div id="assistDisclaimer">AI 辅助建议，仅供具备资质的医生参考，不能替代医生的独立判断。请结合完整病史、体格检查、必要检查和临床规范作出最终决定。系统不会自动作出诊断、自动排除严重疾病、开处方、停药改药、调整剂量、决定急诊住院手术或执行任何治疗。</div></div>
+        <div class="clinic-sec"><b id="assistSecSel">本次分析使用的资料（默认全选，可逐项取消）</b>
+          <div id="assistSel"></div></div>
+        <div class="clinic-sec"><b id="assistSecRefs">参考病例（未经逐个确认不参与分析）</b>
+          <div id="assistRefs"><div class="empty">暂无候选病例</div></div></div>
+        <div class="clinic-sec"><b id="assistSecPreview">发送预览（默认脱敏：姓名/身份证号/电话/地址）</b>
+          <pre id="assistPreview" style="white-space:pre-wrap;font-size:11px;max-height:220px;overflow:auto;margin:0;color:var(--text)"></pre></div>
+        <div class="clinic-sec"><b id="assistSecDx">诊断辅助（辅助排序，非确诊概率）</b>
+          <div id="assistDx"><div class="empty">尚无 AI 分析结果——提交病例后由服务端生成待审核草稿</div></div></div>
+        <div class="clinic-sec"><b id="assistSecAdvice">临床建议（检查/治疗方向/用药核对）</b>
+          <div id="assistAdvice"><div class="empty">尚无 AI 分析结果</div></div></div>
+        <div class="clinic-sec"><b id="assistSecAudit">审核与审计</b>
+          <div id="assistAudit"><div class="empty">尚无分析记录</div></div></div>
+      </div>
+      <div id="assistStatus"></div>
+    </aside>
+    <aside id="settingsDrawer" class="settings-page">
+      <nav id="settingsNav">
+        <button id="settingsClose" class="settings-back" title="返回主界面">← 返回应用</button>
+        <div class="nav-group" id="navGroupLabel">设置</div>
+        <button class="nav-item active" data-pane="general">🌐 <span id="navGeneral">通用</span></button>
+        <button class="nav-item" data-pane="llm">🔌 <span id="navLlm">LLM 与模型</span></button>
+        <button class="nav-item" data-pane="kb">📚 <span id="navKb">医学书籍知识库</span></button>
+        <button class="nav-item" data-pane="security">🛡 <span id="navSecurity">检索与安全</span></button>
+      </nav>
+      <div id="settingsContent">
+        <section class="settings-pane active" data-pane="general">
+          <h2 class="pane-title" id="paneGeneralTitle">通用</h2>
+          <div class="pane-card">
+            <div class="settings-title" id="langSecTitle">🌐 语言 / Language</div>
+            <div class="settings-line" id="langHelp">界面语言（与原生窗口「⚙ 设置」共享，切换即全端生效）</div>
+            <label class="lang-opt"><input type="radio" name="langRadio" id="langZh" value="zh" checked> 简体中文</label>
+            <label class="lang-opt"><input type="radio" name="langRadio" id="langEn" value="en"> English</label>
+          </div>
+          <div class="pane-card">
+            <div class="settings-title" id="agentSecTitle">🔗 接入方式</div>
+            <div class="settings-line" id="agentHelp">数据来源：server 为服务端管线（打开程序自动启动本机服务端，支持跨端续办）；mock 为离线演示（断网或服务端不可用时的退路）。服务地址是 DermAgent 服务端，不是 LLM 网关（LLM 在「LLM 与模型」里配置）。</div>
+            <div class="kb-actions-row">
+              <select id="agentModeSelect" title="选择接入模式：server（服务端管线，自动启动本机服务端）或 mock（离线演示）">
+                <option value="server">server · 服务端（推荐）</option>
+                <option value="mock">mock · 离线演示</option>
+              </select>
+            </div>
+            <input id="agentUrlInput" class="llm-input" placeholder="服务端地址（如 http://127.0.0.1:8765，非 LLM 网关）" autocomplete="off" spellcheck="false">
+            <div class="kb-actions-row"><button id="agentSaveBtn" title="保存接入设置；server 模式保存后立即检查/自动启动本机服务端">💾 保存接入设置</button></div>
+            <div id="agentStatus" class="settings-line">—</div>
+          </div>
+          <div class="pane-card">
+            <div class="settings-title" id="toolSecTitle">🧰 3D 高级工具（后台）</div>
+            <div class="settings-line" id="toolSecHelp">标注/校准/模型调试类工具统一收納在此；功能与原「＋」菜单入口完全一致。</div>
+            <div class="kb-actions-row">
+              <button id="labelMode" title="点击模型表面 → 输入部位名称，保存真实命中标注">🏷 标注模式</button>
+              <button id="wizard" title="抽查 7 个解剖点，确认或纠正系统识别">🧭 校准向导</button>
+              <button id="importGlb" title="导入自定义 GLB 模型">📁 导入 GLB 模型</button>
+              <button id="dbgMode" title="显示命中 Mesh/faceIndex/坐标等调试信息">🐞 调试模式</button>
+            </div>
+          </div>
+        </section>
+        <section class="settings-pane" data-pane="llm">
+          <div class="llm-pane-head">
+            <div><h2 class="pane-title" id="paneLlmTitle">LLM 与模型</h2><div class="settings-line">保存多个 OpenAI 兼容连接，启用后立即用于新的 Agent 请求。</div></div>
+            <button id="llmAddBtn" class="llm-primary-btn">＋ 新增连接</button>
+          </div>
+          <div id="llmConnections" class="llm-connection-list"></div>
+          <div id="llmEditor" class="pane-card llm-editor" style="display:none">
+            <div class="settings-title" id="llmEditorTitle">新增 LLM 连接</div>
+            <input id="llmConnectionId" type="hidden">
+            <label class="llm-field-label">服务商</label>
+            <select id="llmProvider" class="llm-input">
+              <option value="custom">通用 OpenAI Compatible</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="zhipu">智谱 GLM</option>
+            </select>
+            <input id="llmName" class="llm-input" placeholder="连接名称（如 DeepSeek 主连接）" autocomplete="off">
+            <input id="llmBaseUrl" class="llm-input" placeholder="Base URL（如 https://api.example.com/v1）" autocomplete="off" spellcheck="false">
+            <input id="llmModel" class="llm-input" placeholder="模型名（如 deepseek-chat / glm-4.5）" autocomplete="off" spellcheck="false">
+            <input id="llmApiKey" type="password" class="llm-input" placeholder="API Key（编辑时留空 = 保持不变）" autocomplete="off">
+            <label class="llm-clear-key"><input type="checkbox" id="llmClearKey"> 清除已保存的 API Key</label>
+            <div class="kb-actions-row">
+              <button id="llmSaveBtn" class="llm-primary-btn">保存连接</button>
+              <button id="llmCancelBtn">取消</button>
+            </div>
+          </div>
+          <div id="llmStatus" class="settings-line">—</div>
+        </section>
+        <section class="settings-pane" data-pane="kb">
+          <h2 class="pane-title" id="paneKbTitle">医学书籍知识库</h2>
+          <div class="pane-card">
+            <div class="settings-title" id="kbSecTitle">📚 书籍管理（本地 RAG）</div>
+            <div id="kbStatus" class="kb-status">正在连接本地知识库…</div>
+            <div id="kbProgress" class="kb-progress" style="display:none">
+              <div class="kb-progress-head"><span id="kbProgressPhase"></span><span id="kbProgressTimer"></span></div>
+              <div class="kb-progress-bar"><div id="kbProgressFill" class="kb-progress-fill"></div></div>
+            </div>
+            <div id="kbResult" class="kb-result" style="display:none"></div>
+            <div id="kbList"><div class="empty">尚无书籍。导入 txt/md/html 开始建立本地知识库。</div></div>
+            <div class="kb-actions-row">
+              <button id="kbImportBtn" title="批量导入医学书籍（txt/md/html 内置解析；pdf/docx/epub 解析器未装时明确失败，不伪造解析结果）">📂 批量导入书籍</button>
+              <button id="kbRebuildBtn" title="按当前切分方式重切全部书籍——改了切分方式后无需重新导入，一键重建">🔄 重建索引（按当前切分方式）</button>
+              <button id="kbBackupBtn" title="备份书籍、切分文本、索引与元数据到本地备份目录">💾 备份知识库</button>
+              <button id="kbRestoreBackupBtn" title="从最近一次备份恢复整个知识库">↩ 恢复最近备份</button>
+            </div>
+            <input type="file" id="kbFile" accept=".txt,.md,.markdown,.html,.htm,.pdf,.docx,.epub" multiple style="display:none">
+          </div>
+          <div class="pane-card">
+            <div class="settings-title" id="ragSecTitle">🔎 RAG 运行设置</div>
+            <div id="ragRunSettings" class="settings-line">检索模式：关键词（BM25）· 本地向量模型：未安装（检索仅在关键词模式下运行，引用中如实标注）</div>
+            <div class="kb-actions-row">
+              <select id="ragStrengthSelect" title="检索强度：越高召回越多、检索稍慢（低=2条 中=3条 高=6条）">
+                <option value="low">检索强度：低（快）</option>
+                <option value="mid">检索强度：中（推荐）</option>
+                <option value="high">检索强度：高（召回最多）</option>
+              </select>
+              <select id="ragChunkSelect" title="切分方式：只影响之后导入的书。按章节=推荐（语义完整）；按段落=细粒度；按书=整本大块">
+                <option value="section">切分方式：按章节（推荐）</option>
+                <option value="paragraph">切分方式：按段落</option>
+                <option value="book">切分方式：按书（整本大块）</option>
+              </select>
+              <button id="ragPrefsSave" title="保存检索强度与切分方式">💾 保存 RAG 设置</button>
+            </div>
+            <div id="ragPrefsStatus" class="settings-line"></div>
+          </div>
+          <div class="pane-card">
+            <div class="settings-title" id="embSecTitle">🧠 向量模型（本地语义检索）</div>
+            <div class="kb-actions-row">
+              <select id="embModelSelect" title="选择要安装或启用的本地向量模型；检索与书籍原文全程在本机运行，原文不出本机"></select>
+              <button id="embInstallBtn" title="下载并安装所选向量模型（首次安装需联网下载模型文件；之后检索全部本地运行，书籍原文不出本机）">⬇ 安装模型</button>
+            </div>
+            <div id="embProgressLine" class="settings-line" style="display:none"></div>
+            <div id="embHintLine" class="settings-line">首次安装需联网下载模型文件；下载完成后语义检索全程本地运行，书籍原文绝不发送到任何外部服务。</div>
+          </div>
+        </section>
+        <section class="settings-pane" data-pane="security">
+          <h2 class="pane-title" id="paneSecurityTitle">检索与安全</h2>
+          <div class="pane-card">
+            <div class="settings-title" id="secSecTitle">🛡 版本与安全</div>
+            <div id="kbSnapshotLine" class="settings-line">知识库快照版本：—</div>
+            <div class="settings-line" id="dataLocationLine">数据位置：本地 server/data/rag/（书籍、切分文本、索引、元数据与审计全部落盘本地，不依赖云端服务）。本设置界面与原生窗口「⚙ 设置」共享同一套数据。</div>
+            <div id="settingsDisclaimer" class="settings-line">AI 辅助建议，仅供具备资质的医生参考，不能替代医生的独立判断。请结合完整病史、体格检查、必要检查和临床规范作出最终决定。</div>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+  </div>
+</div>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="vendor/loaders/GLTFLoader.js"></script>
+<style>
+/* ============ v69：工作区标题栏 + 导航高亮（对话驱动工作区切换） ============ */
+#wsBar { flex:none; display:flex; align-items:center; gap:8px; padding:6px 12px;
+  border-bottom:1px solid var(--border); background:#fbfbfa; font-size:12px; min-height:34px; }
+#wsTitle { font-weight:600; color:var(--text); }
+#wsCaseId { color:var(--muted); font-family:ui-monospace, Menlo, monospace; font-size:11.5px; }
+#wsFlex { flex:1; }
+#wsBar button { background:#f3f4f6; border:1px solid var(--border); border-radius:8px;
+  padding:4px 10px; font-size:12px; cursor:pointer; color:var(--text); }
+#wsBar button:hover { border-color:var(--accent); color:var(--accent); }
+#wsBar button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+#wsBar button.toggled { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+#wsBar button:disabled { opacity:.45; cursor:default; }
+#wsBar button:disabled:hover { border-color:var(--border); color:var(--text); }
+/* 导航高亮：服务端指定「待医生确认/已修改」的字段或最新结果卡闪烁提示（只提示，不改内容） */
+#casePanel .cp-field.nav-flash, #casePanel .cp-cites.nav-flash,
+.conv-card.nav-flash { animation:navFlash 2.4s ease-out 1; border-radius:8px; }
+@keyframes navFlash { 0% { background:#fff3cd; box-shadow:0 0 0 2px #f0c36d inset; }
+  100% { background:transparent; box-shadow:none; } }
+
+/* ============ v66：右侧门诊病历面板（紧凑病历单，浅色文档风） ============ */
+#casePanel { position:absolute; right:0; top:0; bottom:0; width:38%; min-width:340px;
+  z-index:9; display:none; flex-direction:column; background:#fafaf7;
+  border-left:1px solid #ddd9cf; box-shadow:-6px 0 18px rgba(60,55,40,.10); }
+#workstage.case-open #casePanel { display:flex; }
+/* 对话与 3D 舞台同步让位：宽度完全吻合面板（38% / 最小 340px），不留缝不遮挡 */
+#workstage.case-open #convPane, #workstage.case-open #stage-wrap { right: max(38%, 340px); }
+#cpBanner { flex:none; padding:6px 14px; font-size:12px; background:#fff7e6; color:#8a5a00;
+  border-bottom:1px solid #f0e2c8; }
+#cpBanner.llm-off { background:#fdf1f1; color:#a33; border-bottom-color:#f0d5d5; }
+#cpHead { flex:none; padding:10px 14px 8px; background:#fff; border-bottom:1px solid #e4e0d6; }
+.cp-title-row { display:flex; align-items:center; gap:8px; }
+.cp-title { font-size:15px; color:#2c3a2f; }
+.cp-flex { flex:1; }
+#cpClose { border:none; background:none; font-size:14px; cursor:pointer; color:#888; padding:2px 6px; }
+#cpClose:hover { color:#333; }
+.cp-meta-line { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:5px; font-size:11.5px; color:#777; }
+.cp-meta-line b { color:#445; font-weight:600; }
+.cp-status-tag { padding:1px 8px; border-radius:9px; font-size:11px; font-weight:600; background:#eef0f2; color:#667; }
+.cp-status-tag[data-state="ai_draft"] { background:#e3f0fb; color:#1c6bb0; }
+.cp-status-tag[data-state="pending_review"] { background:#f0f0ee; color:#6a6a62; }
+.cp-status-tag[data-state="doctor_modified"] { background:#fdeeda; color:#b0701c; }
+.cp-status-tag[data-state="confirmed"] { background:#e2f4e6; color:#1e7c3a; }
+.cp-status-tag[data-state="rejected"] { background:#fbe4e4; color:#b03a3a; }
+.cp-actions { display:flex; gap:6px; margin-top:8px; align-items:flex-start; flex-wrap:wrap; }
+.cp-actions button, #cpFooter button {
+  border:1px solid #d5d1c6; background:#fff; color:#444; border-radius:5px;
+  padding:4px 10px; font-size:12px; cursor:pointer; }
+.cp-actions button:hover, #cpFooter button:hover { background:#f4f3ef; }
+.cp-actions .cp-primary, #cpFooter .cp-primary { background:#2f6f4f; border-color:#2f6f4f; color:#fff; }
+.cp-actions .cp-primary:hover, #cpFooter .cp-primary:hover { background:#286145; }
+.cp-actions .cp-ok, #cpFooter .cp-ok { background:#1d6fb8; border-color:#1d6fb8; color:#fff; }
+.cp-actions .cp-ok:hover, #cpFooter .cp-ok:hover { background:#19619f; }
+.cp-actions button:disabled, #cpFooter button:disabled { opacity:.45; cursor:not-allowed; }
+.cp-more-wrap { position:relative; }
+#cpMoreMenu { display:none; position:absolute; right:0; top:110%; z-index:12; background:#fff;
+  border:1px solid #ddd; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,.12); min-width:200px; padding:4px; }
+#cpMoreMenu.open { display:block; }
+#cpMoreMenu button { display:block; width:100%; text-align:left; border:none; background:none;
+  padding:7px 10px; border-radius:4px; font-size:12px; }
+#cpMoreMenu button:hover { background:#f2f1ec; }
+#cpMoreMenu button:disabled { color:#aaa; }
+#cpMoreMenu .cp-danger { color:#b03a3a; }
+#cpBody { flex:1; overflow-y:auto; min-height:0; }
+.cp-empty { margin:26px 16px; font-size:12.5px; color:#8a8a80; line-height:1.7; }
+.cp-field { border-bottom:1px solid #eceae2; background:#fff; }
+.cp-field.core { border-left:3px solid #b8d4c0; }
+.cp-fhead { display:flex; align-items:center; gap:6px; padding:5px 12px 3px; cursor:pointer; user-select:none; }
+.cp-fhead:hover { background:#fbfaf6; }
+.cp-fname { font-size:12px; font-weight:700; color:#3c4a40; }
+.cp-farrow { font-size:10px; color:#aaa; }
+.cp-src { margin-left:auto; font-size:10px; padding:0 6px; border-radius:8px; background:#eef0f2; color:#778; white-space:nowrap; }
+.cp-src[data-src="ai_draft"] { background:#e3f0fb; color:#1c6bb0; }
+.cp-src[data-src="user_input"] { background:#eceff1; color:#546e7a; }
+.cp-src[data-src="doctor_modified"] { background:#fdeeda; color:#b0701c; }
+.cp-src[data-src="doctor_confirmed"] { background:#e2f4e6; color:#1e7c3a; }
+.cp-src[data-src="model_3d"] { background:#e0f2f1; color:#00695c; }
+.cp-src[data-src="kb_ref"] { background:#ede7f6; color:#5e35b1; }
+.cp-fbody { padding:2px 12px 8px 30px; font-size:12.5px; line-height:1.65; color:#333;
+  white-space:pre-wrap; word-break:break-word; }
+.cp-fbody.empty { color:#b5b2a6; font-style:italic; }
+.cp-fbody.editing { padding-right:12px; }
+.cp-fbody textarea { width:100%; box-sizing:border-box; min-height:54px; font:12.5px/1.6 inherit-font, sans-serif;
+  border:1px solid #cfcabb; border-radius:4px; padding:6px; resize:vertical; background:#fffdf5; }
+.cp-group-head { margin:10px 12px 4px; font-size:12px; font-weight:700; color:#6a7a6e; cursor:pointer; }
+.cp-group-head:hover { color:#3c4a40; }
+.cp-cites { margin:10px 12px; font-size:11.5px; color:#5e35b1; background:#f7f4fd;
+  border:1px solid #e4dcf5; border-radius:6px; padding:7px 10px; line-height:1.6; }
+.conv-image-card { border:1px solid #e4dcf5; border-radius:8px; padding:8px 10px; margin:6px 0; background:#faf9ff; }
+.conv-feat-grid { display:flex; flex-wrap:wrap; gap:4px 10px; margin:6px 0; }
+.conv-feat { font-size:11.5px; color:#4527a0; display:inline-flex; align-items:center; gap:3px; }
+.cp-cites-h { font-weight:600; margin-bottom:4px; }
+.cp-cite { border-top:1px dashed #e4dcf5; padding:5px 0 4px; }
+.cp-cite-t { font-weight:600; color:#4527a0; }
+.cp-cite-s { color:#7e6fae; font-size:10.5px; margin-top:1px; }
+.cp-cite-q { color:#5c5470; font-size:10.5px; margin-top:2px; }
+.cp-cite-a { color:#a39a8e; font-size:10px; margin-top:1px; }
+.cp-disclaimer { margin:12px; font-size:11px; color:#9a988e; line-height:1.6; }
+#cpFooter { flex:none; display:flex; gap:8px; padding:9px 12px; background:#fff; border-top:1px solid #e4e0d6; }
+#cpBackBtn { flex:1; }
+#cpFooter .cp-primary, #cpFooter .cp-ok { flex:1; }
+#cpHistoryLayer { display:none; position:absolute; inset:0; z-index:20; background:rgba(40,38,30,.35); }
+#cpHistoryLayer.open { display:flex; align-items:center; justify-content:center; }
+.cph-box { width:88%; max-height:80%; background:#fff; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; }
+.cph-head { flex:none; display:flex; justify-content:space-between; align-items:center;
+  padding:10px 14px; border-bottom:1px solid #eee; font-size:13px; }
+.cph-head button { border:none; background:none; cursor:pointer; font-size:13px; color:#888; }
+#cphList { flex:1; overflow-y:auto; padding:8px 14px 14px; font-size:12px; }
+.cph-item { padding:7px 0; border-bottom:1px dashed #eee; line-height:1.6; }
+.cph-item .cph-meta { color:#8a8a80; font-size:11px; }
+.cph-item .cph-diff-before { color:#a55; }
+.cph-item .cph-diff-after { color:#1e7c3a; }
+@media (max-width: 900px) { #casePanel { width:46%; min-width:300px; } #workstage.case-open #convPane, #workstage.case-open #stage-wrap { right: max(46%, 300px); } }
+</style>
+<script src="browser-bridge.js?v=1"></script>
+<script src="main.js?v=90"></script>
+</body>
+</html>

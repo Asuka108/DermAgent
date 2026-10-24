@@ -1,0 +1,85 @@
+{
+  "name": "nuwax-flow-ts",
+  "version": "2.1.7",
+  "description": "Workflow-orchestration agent template — the agent runs an explicit LangGraph StateGraph over ACP. Ships 4 curated flows plus 8 reusable topology building blocks.",
+  "engine": "nuwax-flow-ts",
+  "source": {
+    "type": "s3",
+    "endpoint": "https://s3.nuwax.com:9443",
+    "bucket": "nuwax-packages",
+    "region": "us-east-1",
+    "prefix": "agent-engines/nuwax-flow-ts/versions/2.1.7",
+    "version": "2.1.7",
+    "forcePathStyle": true
+  },
+  "alternativeSources": [
+    {
+      "type": "npm",
+      "package": "nuwax-flow-ts",
+      "registry": "https://registry.npmjs.org",
+      "version": "2.1.7"
+    },
+    {
+      "type": "tgz",
+      "path": "./nuwax-flow-ts-2.1.7.tgz",
+      "version": "2.1.7"
+    },
+    {
+      "type": "git",
+      "url": "https://github.com/nuwax-ai/deepagents-dev-templates.git",
+      "ref": "v2.1.7"
+    },
+    {
+      "type": "s3-channel",
+      "endpoint": "https://s3.nuwax.com:9443",
+      "bucket": "nuwax-packages",
+      "channel": "stable",
+      "pointerPath": "agent-engines/nuwax-flow-ts/channels/stable.json"
+    }
+  ],
+  "bin": {
+    "start": "dist/index.js"
+  },
+  "env": {
+    "required": [],
+    "optional": [
+      "ACP_SESSION_CONFIG_JSON",
+      "SYSTEM_PROMPT",
+      "AGENT_SYSTEM_PROMPT",
+      "ANTHROPIC_API_KEY",
+      "ANTHROPIC_MODEL",
+      "ANTHROPIC_BASE_URL",
+      "ANTHROPIC_AUTH_TOKEN",
+      "OPENAI_API_KEY",
+      "OPENAI_MODEL",
+      "OPENAI_BASE_URL",
+      "LOG_LEVEL",
+      "LOG_DIR"
+    ],
+    "oneOfRequired": [
+      [
+        "ANTHROPIC_API_KEY"
+      ],
+      [
+        "ANTHROPIC_AUTH_TOKEN"
+      ],
+      [
+        "OPENAI_API_KEY"
+      ]
+    ]
+  },
+  "mcp": {
+    "servers": []
+  },
+  "checksum": {
+    "algorithm": "sha256",
+    "value": ""
+  },
+  "metadata": {
+    "templateVersion": "1.0.0",
+    "framework": "deepagents-js",
+    "deepagentsVersion": "^1.10.2",
+    "acpVersion": "latest",
+    "nodeVersion": ">=20.0.0"
+  }
+}

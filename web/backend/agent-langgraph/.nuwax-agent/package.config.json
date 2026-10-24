@@ -1,0 +1,68 @@
+{
+  "$schema": "https://agent.nuwax.com/schemas/nuwax-agent-package-config.v1.json",
+  "schemaVersion": "nuwax.agent.package-config.v1",
+  "packageId": "nuwax-flow-ts",
+  "version": "${PACKAGE_VERSION}",
+  "artifactTypes": ["npm-tgz", "nuwax-tar", "nuwax-zip"],
+  "dependencyStrategy": "esbuild-bundle",
+  "entrypoints": {
+    "server": "dist/bundle.mjs",
+    "cli": "dist/bundle.mjs"
+  },
+  "include": [
+    "dist/**",
+    "config/**",
+    "prompts/**",
+    "skills/**",
+    "docs/**",
+    "scripts/**",
+    ".nuwax-agent/**",
+    "package.json",
+    "README.md"
+  ],
+  "exclude": [
+    "logs/**",
+    ".logs/",
+    ".flow-sessions/**",
+    ".env",
+    "*.local.json",
+    "**/*.tsbuildinfo",
+    "node_modules/**"
+  ],
+  "excludeSecrets": [
+    ".env",
+    "*.local.json",
+    "logs/**",
+    ".logs/",
+    ".flow-sessions/**",
+    "**/*secret*",
+    "**/*token*"
+  ],
+  "replaceOnPackage": [
+    "PACKAGE_VERSION"
+  ],
+  "replaceOnInstall": [
+    "INSTALL_ROOT",
+    "WORKSPACE_ROOT",
+    "LOG_DIR",
+    "OPENAI_MODEL",
+    "OPENAI_BASE_URL",
+    "ANTHROPIC_MODEL",
+    "ANTHROPIC_BASE_URL",
+    "MAX_TOKENS",
+    "LOG_LEVEL"
+  ],
+  "secretPlaceholders": [
+    "SECRET_OPENAI_API_KEY",
+    "SECRET_ANTHROPIC_API_KEY"
+  ],
+  "platformJson": {
+    "outputDirectory": "dist-packages",
+    "matrix": [
+      { "os": "darwin", "arch": "arm64" },
+      { "os": "darwin", "arch": "x64" },
+      { "os": "linux", "arch": "x64" },
+      { "os": "linux", "arch": "arm64" }
+    ]
+  }
+}

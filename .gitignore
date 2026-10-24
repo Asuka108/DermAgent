@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+.logs/
+
+# Test coverage
+coverage/
+
+# Temp files
+*.tmp
+*.swp
+*.swo
+
+# Package artifacts
+*.tgz
+dist-packages/
+agent-package.release.json
+package-checksums.json
+
+# Flow session persistence (FileCheckpointSaver)
+.flow-sessions/
+.pnpm-store/
+build/
+.npmrc
+.agents/
+.claude/
+.opencode/
+.codex/
+.tmp/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Python client
+client/.venv/
+client/__pycache__/
+client/**/__pycache__/
+client/data/
+client/dist/
+client/build/
+*.spec.bak
+
+# Runtime data (do not commit demo session/audit data)
+server/data/
+client/data/settings.json
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# temp venv
+.venv-tmp/
+anatomy-atlas.json

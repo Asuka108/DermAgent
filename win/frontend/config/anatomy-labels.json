@@ -1,0 +1,409 @@
+{
+  "version": "1.0",
+  "model": "vendor/models/Custom3d66.glb",
+  "sha256_prefix": "1d65241f",
+  "note": "锚点为 three.js 装配复位姿态下的世界坐标，由 GLB 顶点几何离线聚类生成；本 GLB 无骨骼/无解剖命名 mesh（源文件仅 3ds Max 自动编号）。更换模型必须重新生成。",
+  "fitInfo": {
+    "min": [
+      -1.849,
+      -2.49,
+      -0.427
+    ],
+    "max": [
+      1.849,
+      2.51,
+      0.431
+    ]
+  },
+  "entries": [
+    {
+      "anatomical_label": "right_eye",
+      "display_zh": "右眼（含虹膜）",
+      "mesh_names": [
+        "Obj3d66-19298115-7-343",
+        "Obj3d66-19298115-8-983",
+        "Obj3d66-19298115-9-481"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -0.094,
+        2.134,
+        0.205
+      ],
+      "pick_hint": "眼白球+虹膜盘+高光；镜框环内",
+      "confidence": 0.95,
+      "provenance": "GLB 独立 mesh（语义由几何形状+空间位置判读；源文件无解剖命名）"
+    },
+    {
+      "anatomical_label": "left_eye",
+      "display_zh": "左眼（含虹膜）",
+      "mesh_names": [
+        "Obj3d66-19298115-10-116",
+        "Obj3d66-19298115-11-506",
+        "Obj3d66-19298115-12-668"
+      ],
+      "side": "left",
+      "world_xyz": [
+        0.094,
+        2.134,
+        0.205
+      ],
+      "pick_hint": "眼白球+虹膜盘+高光；镜框环内",
+      "confidence": 0.95,
+      "provenance": "GLB 独立 mesh（语义由几何形状+空间位置判读；源文件无解剖命名）"
+    },
+    {
+      "anatomical_label": "nose",
+      "display_zh": "鼻",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_2"
+      ],
+      "side": "midline",
+      "world_xyz": [
+        -0.0007,
+        1.9643,
+        0.2507
+      ],
+      "pick_hint": "鼻尖",
+      "confidence": 0.9,
+      "provenance": "GLB 独立 mesh（语义由几何形状+空间位置判读；源文件无解剖命名）"
+    },
+    {
+      "anatomical_label": "upper_lip",
+      "display_zh": "上唇",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_1"
+      ],
+      "side": "midline",
+      "world_xyz": [
+        0.0003,
+        2.0748,
+        0.2612
+      ],
+      "pick_hint": "唇区几何切分（y 中线分割）",
+      "confidence": 0.75,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "lower_lip",
+      "display_zh": "下唇",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_1"
+      ],
+      "side": "midline",
+      "world_xyz": [
+        -0.0002,
+        2.0218,
+        0.2748
+      ],
+      "pick_hint": "唇区几何切分（y 中线分割）",
+      "confidence": 0.75,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "lips",
+      "display_zh": "唇（聚合）",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_1"
+      ],
+      "side": "midline",
+      "world_xyz": [
+        -0.0,
+        2.048,
+        0.268
+      ],
+      "pick_hint": "上下唇锚点中点",
+      "confidence": 0.8,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）",
+      "aggregate_of": [
+        "upper_lip",
+        "lower_lip"
+      ]
+    },
+    {
+      "anatomical_label": "right_thumb_finger",
+      "display_zh": "右手拇指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -1.8086,
+        0.0792,
+        0.1926
+      ],
+      "pick_hint": "指尖（簇 n=47）",
+      "confidence": 0.85,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "left_thumb_finger",
+      "display_zh": "左手拇指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "left",
+      "world_xyz": [
+        1.8086,
+        0.0792,
+        0.1926
+      ],
+      "pick_hint": "右侧锚点镜像（模型左右对称 671/672 顶点）",
+      "confidence": 0.8,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "right_index_finger",
+      "display_zh": "右手食指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -1.848,
+        0.0489,
+        0.1223
+      ],
+      "pick_hint": "指尖（簇 n=34）",
+      "confidence": 0.85,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "left_index_finger",
+      "display_zh": "左手食指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "left",
+      "world_xyz": [
+        1.848,
+        0.0489,
+        0.1223
+      ],
+      "pick_hint": "右侧锚点镜像（模型左右对称 671/672 顶点）",
+      "confidence": 0.8,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "right_middle_finger",
+      "display_zh": "右手中指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -1.8471,
+        0.0487,
+        0.1058
+      ],
+      "pick_hint": "指尖（簇 n=28）",
+      "confidence": 0.85,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "left_middle_finger",
+      "display_zh": "左手中指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "left",
+      "world_xyz": [
+        1.8471,
+        0.0487,
+        0.1058
+      ],
+      "pick_hint": "右侧锚点镜像（模型左右对称 671/672 顶点）",
+      "confidence": 0.8,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "right_ring_finger",
+      "display_zh": "右手无名指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -1.8229,
+        0.0655,
+        0.0433
+      ],
+      "pick_hint": "指尖（簇 n=27）",
+      "confidence": 0.85,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "left_ring_finger",
+      "display_zh": "左手无名指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "left",
+      "world_xyz": [
+        1.8229,
+        0.0655,
+        0.0433
+      ],
+      "pick_hint": "右侧锚点镜像（模型左右对称 671/672 顶点）",
+      "confidence": 0.8,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "right_little_finger",
+      "display_zh": "右手小指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -1.8241,
+        0.0658,
+        0.028
+      ],
+      "pick_hint": "指尖（簇 n=27）",
+      "confidence": 0.85,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "left_little_finger",
+      "display_zh": "左手小指",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "left",
+      "world_xyz": [
+        1.8241,
+        0.0658,
+        0.028
+      ],
+      "pick_hint": "右侧锚点镜像（模型左右对称 671/672 顶点）",
+      "confidence": 0.8,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）"
+    },
+    {
+      "anatomical_label": "right_hand",
+      "display_zh": "右手（聚合）",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -1.6942,
+        0.1756,
+        0.1047
+      ],
+      "pick_hint": "手部顶点质心",
+      "confidence": 0.9,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）",
+      "aggregate_of": [
+        "thumb/index/middle/ring/little finger",
+        "palm/back"
+      ]
+    },
+    {
+      "anatomical_label": "right_toes",
+      "display_zh": "右脚趾（聚合）",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_4"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -0.6726,
+        -2.4339,
+        0.3905
+      ],
+      "pick_hint": "趾端环带质心",
+      "confidence": 0.6,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）；趾端网格分辨率不足（趾间隙<2mm、单趾顶点<15），无法逐趾分割",
+      "aggregate_of": [
+        "5 趾不可逐一分割"
+      ]
+    },
+    {
+      "anatomical_label": "right_big_toe",
+      "display_zh": "右拇趾",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_4"
+      ],
+      "side": "right",
+      "world_xyz": [
+        -0.6726,
+        -2.4339,
+        0.3905
+      ],
+      "pick_hint": "内侧趾端",
+      "confidence": 0.5,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）；低置信"
+    },
+    {
+      "anatomical_label": "left_hand",
+      "display_zh": "左手（聚合）",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_5"
+      ],
+      "side": "left",
+      "world_xyz": [
+        1.6935,
+        0.1756,
+        0.1048
+      ],
+      "pick_hint": "手部顶点质心",
+      "confidence": 0.9,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）",
+      "aggregate_of": [
+        "thumb/index/middle/ring/little finger",
+        "palm/back"
+      ]
+    },
+    {
+      "anatomical_label": "left_toes",
+      "display_zh": "左脚趾（聚合）",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_4"
+      ],
+      "side": "left",
+      "world_xyz": [
+        0.6726,
+        -2.4341,
+        0.3903
+      ],
+      "pick_hint": "趾端环带质心",
+      "confidence": 0.6,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）；趾端网格分辨率不足（趾间隙<2mm、单趾顶点<15），无法逐趾分割",
+      "aggregate_of": [
+        "5 趾不可逐一分割"
+      ]
+    },
+    {
+      "anatomical_label": "left_big_toe",
+      "display_zh": "左拇趾",
+      "mesh_names": [
+        "Obj3d66-19298115-6-141_4"
+      ],
+      "side": "left",
+      "world_xyz": [
+        0.6726,
+        -2.4341,
+        0.3903
+      ],
+      "pick_hint": "内侧趾端",
+      "confidence": 0.5,
+      "provenance": "顶点几何聚类（世界坐标 z 间隙分割 6mm，指尖环带 |x|>1.78m）；低置信"
+    }
+  ],
+  "unreliable_or_missing": [
+    {
+      "anatomical_label": "ear",
+      "display_zh": "耳",
+      "reason": "耳区被 4 层头发 mesh（-14-625/-15-293/-16-833/-17-853）覆盖，区域内顶点 0-3 个，无独立耳几何"
+    },
+    {
+      "anatomical_label": "toe_2..toe_5",
+      "display_zh": "第二至第五趾（单趾）",
+      "reason": "趾端网格分辨率不足（趾间隙<2mm、单趾顶点<15），无法逐趾分割"
+    }
+  ],
+  "occlusion_notes": [
+    "眼镜框 mesh Obj3d66-19298115-1-966_1/-2 位于眼球前方（z 0.201..0.247 vs 虹膜面 0.211..0.223）；命中镜框且落点在镜框环内时回退为对应侧眼球"
+  ]
+}

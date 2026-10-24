@@ -1,0 +1,98 @@
+{
+  "name": "nuwax-flow-ts",
+  "version": "2.1.7",
+  "description": "Flow / workflow-orchestration agent template — explicit LangGraph ReAct default graph over ACP. Self-contained runtime; MCP via @langchain/mcp-adapters. App layer is a pure default ReAct workspace (flow.active: default only); extend via graph.ts + docs.",
+  "type": "module",
+  "packageManager": "pnpm@10.18.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./graph": {
+      "types": "./dist/app/graph.d.ts",
+      "import": "./dist/app/graph.js"
+    },
+    "./topology": {
+      "types": "./dist/app/topology.d.ts",
+      "import": "./dist/app/topology.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "nuwax-flow-ts": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist/",
+    "dev": "tsx watch --tsconfig tsconfig.json src/index.ts",
+    "start": "node dist/index.js",
+    "flow": "tsx src/index.ts flow",
+    "graph": "tsx src/index.ts graph",
+    "flows": "tsx src/index.ts flows",
+    "capabilities": "tsx src/index.ts capabilities",
+    "sessions": "tsx src/index.ts sessions",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:integration": "RUN_INTEGRATION=1 vitest run",
+    "test:watch": "vitest",
+    "bundle": "node scripts/lib/bundle.mjs",
+    "setup:tools": "node scripts/setup-win-tools.mjs",
+    "check:tools": "node scripts/check-tools.mjs",
+    "version:check": "node scripts/sync-version.mjs --check",
+    "version:sync": "node scripts/sync-version.mjs",
+    "version:preview": "node scripts/sync-version.mjs --dry-run",
+    "package": "node scripts/sync-version.mjs --check && node scripts/package.mjs",
+    "package:all": "node scripts/sync-version.mjs --check && node scripts/package.mjs --format all",
+    "package:platforms": "node scripts/sync-version.mjs --check && node scripts/package-platforms.mjs",
+    "validate:package": "node scripts/validate-package.mjs"
+  },
+  "dependencies": {
+    "@langchain/core": "1.2.1",
+    "@langchain/langgraph": "1.4.7",
+    "@langchain/anthropic": "1.4.0",
+    "@langchain/openai": "1.4.7",
+    "@langchain/langgraph-checkpoint": "1.1.3",
+    "@langchain/langgraph-sdk": "1.9.25",
+    "@langchain/mcp-adapters": "1.1.3",
+    "deepagents": "1.10.7",
+    "langchain": "1.5.2",
+    "yaml": "^2.9.0",
+    "dotenv": "^16.4.0",
+    "zod": "^3.25.76",
+    "@agentclientprotocol/sdk": "^0.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "bestzip": "2.2.5",
+    "tsx": "^4.22.4",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "config",
+    "scripts",
+    ".nuwax-agent/agent-package.json"
+  ],
+  "keywords": [
+    "deepagents",
+    "langgraph",
+    "rag",
+    "workflow",
+    "orchestration",
+    "acp",
+    "template"
+  ],
+  "license": "MIT"
+}

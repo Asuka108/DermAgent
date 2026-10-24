@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "schema_version": 3,
+  "_doc": "人工校准标签表与版本化人工区域。manual_regions 按模型指纹保存三角面集合；LLM 结果仅为待审核草稿，不得替代人工真值。",
+  "model": {
+    "path": "vendor/models/Custom3d66.glb",
+    "sha256": null,
+    "topology_version": "runtime-mesh-face-v1"
+  },
+  "calibrations": {},
+  "manual_regions": {},
+  "regions": {},
+  "llm_subregions": {},
+  "history": []
+}

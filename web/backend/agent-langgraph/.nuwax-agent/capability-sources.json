@@ -1,0 +1,57 @@
+{
+  "$schema": "https://agent.nuwax.com/schemas/nuwax-agent-capability-sources.v1.json",
+  "schemaVersion": "nuwax.agent.capability-sources.v1",
+  "sources": {
+    "workspace-config": {
+      "description": "Workspace configuration files editable in the project tree.",
+      "examples": ["systemPrompt", "mcpServers", "skills", "model", "subagents"]
+    },
+    "agent-builtin": {
+      "description": "Capabilities shipped inside the template package and available without platform mutation.",
+      "examples": ["runtimeTools", "compaction", "promptFragments", "packagingHooks"]
+    },
+    "env-builtin": {
+      "description": "Environment values provided by the cloud computer, local machine, CI, or installer.",
+      "examples": ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_BASE_URL", "LOG_LEVEL", "LOG_DIR"]
+    },
+    "agent-builtin-file": {
+      "description": "Persistent runtime data stored as files inside the template's own session dir (no DB).",
+      "examples": ["sessionStore"]
+    },
+    "package-placeholder": {
+      "description": "Values replaced when building or installing tar/zip/npm artifacts.",
+      "examples": ["INSTALL_ROOT", "PACKAGE_VERSION"]
+    }
+  },
+  "capabilities": {
+    "systemPrompt": { "source": "workspace-config", "fallback": "prompts/flow.base.md" },
+    "mcpServers": { "source": "workspace-config", "fallback": "config/mcp.default.json" },
+    "skills": { "source": "workspace-config", "fallback": "builtin/skills" },
+    "model": { "source": "workspace-config", "fallback": "env-builtin" },
+    "subagents": { "source": "workspace-config", "fallback": "builtin/agents" },
+    "openaiApiKey": { "source": "env-builtin", "secret": true },
+    "anthropicApiKey": { "source": "env-builtin", "secret": true },
+    "builtInTools": {
+      "source": "agent-builtin",
+      "items": [
+        "bash",
+        "read_file",
+        "write_file",
+        "edit_file",
+        "grep",
+        "glob",
+        "http_request",
+        "json_utils",
+        "load_skill",
+        "task",
+        "write_todos",
+        "echo",
+        "calculate",
+        "time"
+      ]
+    },
+    "compaction": { "source": "agent-builtin" },
+    "sessionStore": { "source": "agent-builtin-file", "path": "~/.flowagents" },
+    "installRoot": { "source": "package-placeholder" }
+  }
+}

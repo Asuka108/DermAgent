@@ -1,0 +1,95 @@
+{
+  "$schema": "https://agent.nuwax.com/schemas/nuwax-agent-placeholders.v1.json",
+  "schemaVersion": "nuwax.agent.placeholders.v1",
+  "placeholders": [
+    {
+      "name": "TEMPLATE_ROOT",
+      "description": "Absolute path to the unpacked flow-ts template source during development.",
+      "requiredAt": "debug"
+    },
+    {
+      "name": "INSTALL_ROOT",
+      "description": "Absolute path to the installed nuwax-flow-ts agent package.",
+      "requiredAt": "install"
+    },
+    {
+      "name": "WORKSPACE_ROOT",
+      "description": "Absolute path to the user's active workspace.",
+      "requiredAt": "debug"
+    },
+    {
+      "name": "LOG_DIR",
+      "description": "Directory for runtime logs (defaults to the package logs/ dir).",
+      "default": "${INSTALL_ROOT}/logs",
+      "requiredAt": "debug"
+    },
+    {
+      "name": "OPENAI_MODEL",
+      "description": "OpenAI-compatible chat model name (method A; 国内默认 DeepSeek，可换通义/智谱/Kimi/小米 mimo).",
+      "default": "deepseek-chat",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "OPENAI_BASE_URL",
+      "description": "OpenAI-compatible API base URL (method A); 国内默认 DeepSeek 端点.",
+      "default": "https://api.deepseek.com/v1",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "SECRET_OPENAI_API_KEY",
+      "description": "Secret OpenAI-compatible API key (method A).",
+      "secret": true,
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "ANTHROPIC_MODEL",
+      "description": "Anthropic-protocol model name (method B; default provider).",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "ANTHROPIC_BASE_URL",
+      "description": "Anthropic-protocol / self-hosted proxy base URL (method B).",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "SECRET_ANTHROPIC_API_KEY",
+      "description": "Secret Anthropic API key (method B).",
+      "secret": true,
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "ANTHROPIC_AUTH_TOKEN",
+      "description": "Anthropic bearer auth token (alternative to the API key, method B).",
+      "secret": true,
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "MAX_TOKENS",
+      "description": "Maximum model output tokens (overrides config model.settings.maxTokens).",
+      "default": "16384",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "LOG_LEVEL",
+      "description": "Runtime logging level.",
+      "default": "info",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "DEEPAGENTS_DEFAULT_MCP",
+      "description": "Set to \"disabled\" (or \"off\"/\"none\", case-insensitive) to skip default MCP server loading; ACP session mcpServers are unaffected.",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "MCP_TOOL_TIMEOUT_MS",
+      "description": "MCP tool invocation timeout in milliseconds.",
+      "default": "30000",
+      "requiredAt": "runtime"
+    },
+    {
+      "name": "PACKAGE_VERSION",
+      "description": "Version stamped into generated install metadata.",
+      "requiredAt": "package"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>肤智（DermAgent）— 皮肤科循证辅助智能体</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#10151c">
+<style>
+  :root { --bg:#10151c; --panel:#161e2b; --line:#2a3a52; --line2:#3d5175; --txt:#dbe7ff;
+          --muted:#9ab0cd; --accent:#ffd479; --danger:#ff8a80; --ok:#8affc1; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--txt); margin: 0;
+         font-family: "PingFang SC","Microsoft YaHei",system-ui,sans-serif; font-size: 14px;
+         height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  header { display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+           background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; }
+  header .badge { color: var(--accent); font-size: 11px; border: 1px solid var(--line2);
+                  border-radius: 4px; padding: 1px 8px; }
+  header .status { margin-left: auto; color: var(--muted); font-size: 12px; }
+  main { flex: 1; display: grid; grid-template-columns: minmax(280px, 340px) minmax(340px, 1fr) minmax(320px, 420px);
+         gap: 10px; padding: 10px; min-height: 0; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+            padding: 10px; display: flex; flex-direction: column; min-height: 0; }
+  section h2 { font-size: 13px; color: var(--accent); margin: 0 0 8px; flex: 0 0 auto; }
+  label { display: block; color: var(--muted); font-size: 12px; margin: 6px 0 3px; }
+  input, textarea, select { width: 100%; background: var(--bg); color: var(--txt);
+      border: 1px solid var(--line); border-radius: 4px; padding: 7px; font-size: 13px; }
+  textarea { resize: vertical; }
+  button { background: #2a3a52; color: var(--txt); border: 1px solid var(--line2);
+           border-radius: 4px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+  button:hover { background: var(--line2); }
+  button.primary { background: #2f4a6e; font-weight: bold; }
+  button.danger { border-color: #7a3b3b; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 0; }
+  .cases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 6px; }
+  .flag { color: var(--danger); font-weight: bold; }
+  .meta { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  .pill { display: inline-block; border-radius: 10px; padding: 0 8px; font-size: 11px;
+          border: 1px solid var(--line2); color: var(--muted); margin-right: 4px; }
+  cite { color: var(--accent); font-style: normal; cursor: pointer; text-decoration: underline dotted; }
+  blockquote { margin: 4px 0; padding: 5px 9px; border-left: 3px solid var(--line2);
+               color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 3px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: normal; }
+  ul.plain { margin: 4px 0; padding-left: 16px; }
+  pre.report { white-space: pre-wrap; font-size: 11px; max-height: 300px; overflow: auto;
+               background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--line); }
+  .hidden { display: none !important; }
+  .empty { color: #5b6c86; font-size: 12px; text-align: center; margin: auto 0; padding: 20px 8px;
+           border: 1px dashed var(--line); border-radius: 6px; }
+  #timeline { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .msg { border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-size: 12px; }
+  .msg.user { border-left: 3px solid var(--line2); }
+  .msg.agent { border-left: 3px solid var(--accent); }
+  .msg.system { border-left: 3px solid #5b6c86; color: var(--muted); }
+  .msg .who { color: var(--accent); font-size: 11px; margin-bottom: 4px; }
+  .msg .ts { color: #5b6c86; font-size: 10px; float: right; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 11px; margin-top: 4px; }
+  #stage3d { flex: 1; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; min-height: 0; }
+  #stage3d iframe { width: 100%; height: 100%; border: 0; display: block; }
+  #selectedRegion { color: var(--accent); font-size: 12px; padding: 4px 2px; }
+  #resultPanel { flex: 1; overflow-y: auto; min-height: 0; }
+  #stateBar { font-size: 11px; color: var(--muted); }
+  footer { color: var(--muted); font-size: 11px; text-align: center; padding: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>肤智（DermAgent）</h1>
+  <span class="badge">schema v1.1</span>
+  <span class="badge">仅供医生决策支持 · 不构成诊断或处方</span>
+  <span class="badge">Web / Android / Windows 三端一致</span>
+  <span class="status" id="status">连接中…</span>
+</header>
+<main>
+  <!-- 左：历史对话记录（提交后产生） -->
+  <section>
+    <h2>🕘 历史对话记录</h2>
+    <div class="row">
+      <select id="caseList"><option value="">— 跨端续办：选择病例 —</option></select>
+      <button id="btnResume" style="flex:0 0 auto">续办</button>
+    </div>
+    <div id="timeline"><div class="empty">提交病例后，这里显示本次问诊的对话历史</div></div>
+  </section>
+
+  <!-- 中：3D 模型 + 输入框 -->
+  <section>
+    <h2>🧍 3D 人体区域选择（点击部位自动填入输入框）</h2>
+    <div id="stage3d"><iframe id="iframe3d" src="/web/index.html?v=25" title="3D 人体"></iframe></div>
+    <div id="selectedRegion">未选择区域</div>
+    <div class="cases">
+      <button data-demo="1">案例1</button>
+      <button data-demo="2">案例2 红旗</button>
+      <button data-demo="3">案例3 缺资料</button>
+      <button data-demo="4">案例4 无证据</button>
+    </div>
+    <textarea id="caseInput" rows="3" placeholder="在此输入脱敏病例描述（身体区域：…；主诉：…；症状：…），或点击上方案例快捷键"></textarea>
+    <div class="row" style="margin-top:6px">
+      <input type="file" id="photo" accept=".png,.jpg,.jpeg,.webp" style="font-size:11px">
+    </div>
+    <div id="photoPreview" class="meta"></div>
+    <div class="row" style="margin-top:6px">
+      <button class="primary" id="btnSubmit">提交给智能体 →</button>
+    </div>
+    <div id="stateBar" class="meta">尚未提交病例</div>
+  </section>
+
+  <!-- 右：症状显示区域（提交后运行出来） -->
+  <section>
+    <h2>📋 症状显示区域（智能体分析结果）</h2>
+    <div id="resultPanel"><div class="empty">提交病例后，这里显示症状结构化结果、红旗、鉴别诊断与引用</div></div>
+  </section>
+</main>
+<footer>肤智（DermAgent）· 女娲智能体 OS 编排 · 合成/脱敏数据 · 人体模型 Cesium Man（CC BY 4.0）· 仅供医生决策支持演示</footer>
+<script src="app.js"></script>
+</body>
+</html>

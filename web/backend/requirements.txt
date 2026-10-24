@@ -1,0 +1,17 @@
+# 肤智（DermAgent）Web 后端（可信服务层）依赖 —— 本文件为整理目录时新增，原仓库未提供。
+# 安装：python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+# 运行：cd server && python app.py        （默认端口 8765，可用 PORT=xxxx 覆盖）
+
+fastapi>=0.141          # 服务层框架（app.py / 静态托管 web 前端）
+uvicorn>=0.52           # ASGI 服务器
+pydantic>=2.13          # 请求/响应模型
+certifi>=2026.7         # 本机 SSL 证书束（LLM 端点在 macOS 框架 Python 下需要）
+
+# —— 本地向量检索（可选：不装则自动降级为纯 BM25 关键词检索，功能不缺失）——
+numpy>=2.0
+sentence-transformers>=6.0
+torch>=2.14             # 体积较大；仅在需要混合检索（BGE 语义排序）时安装
+
+# —— 测试 ——
+pytest>=9.1
+httpx>=0.28             # fastapi.testclient 依赖
