@@ -71,10 +71,9 @@ __pycache__/
 .venv-tmp/
 anatomy-atlas.json
 
-# 3D 资产：授权未登记，不入库（用户自备授权模型）
+# 3D 资产：授权未登记，不入库（用户自备授权模型；README 截图仅为界面示意）
 web/frontend/vendor/models/
 *.glb
-docs/screenshots/03-3d.png
 
 # 本产品无 Android 端
 web/frontend/android/
