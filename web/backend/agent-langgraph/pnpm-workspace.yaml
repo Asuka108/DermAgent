@@ -1,0 +1,24 @@
+# 该模板常被「独立复制 / 沙箱安装」使用（不只是作为 monorepo 成员被根 workspace 管理），
+# 因此需要在包内固化一份 pnpm 设置，保证脱离主仓后 `pnpm install` 行为一致。
+#
+# 为什么必须放在 pnpm-workspace.yaml（而不是 .npmrc）：
+#   pnpm 11 起 `.npmrc` 只读 auth / registry，其余所有 pnpm 设置（构建放行、发布门禁、
+#   依赖校验等）一律只从 `pnpm-workspace.yaml`（或全局 config.yaml）读取。
+#   若仅写在 .npmrc，pnpm 11 会静默忽略，导致沙箱内被默认策略拦住。
+# 兼容范围：以下三项在 pnpm 10.9+（含本包锁定的 10.18.2）与 pnpm 11 下均有效。
+
+# 放行依赖的构建脚本（preinstall/install/postinstall）。
+# esbuild / tsx 等依赖原生二进制，需要 postinstall 构建；pnpm 10 默认拦截安装脚本、
+# pnpm 11 默认对未登记的构建直接报错，而无 TTY 的沙箱无法交互审批，故显式放行。
+# 说明：这里刻意不用 `allowBuilds`（更细粒度、更安全），因为该字段要到 pnpm v10.26.0
+#       才引入，本包锁的是 10.18.2，用它会被当未知字段忽略而失效；
+#       `dangerouslyAllowAllBuilds` 自 v10.9.0 起支持，10.18.2 与 11 都认。
+dangerouslyAllowAllBuilds: true
+
+# 关闭「发布时长门禁」：pnpm 11 默认 minimumReleaseAge=1440（分钟），会阻止安装刚发布不久的版本。
+# 本包自带可信 lockfile、版本已锁定，置 0 允许立即安装，避免沙箱构建卡在成熟度等待上。
+minimumReleaseAge: 0
+
+# 关闭「运行前依赖校验」：pnpm 11 默认在 exec / run 前校验依赖完整性，
+# 无 TTY 沙箱下该校验易阻塞；node_modules 安装就绪后无需再校验，故关闭以求 9/10/11 行为一致。
+verifyDepsBeforeRun: false

@@ -1,0 +1,99 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+.logs/
+
+# Test coverage
+coverage/
+
+# Temp files
+*.tmp
+*.swp
+*.swo
+
+# Package artifacts
+*.tgz
+dist-packages/
+agent-package.release.json
+package-checksums.json
+
+# Flow session persistence (FileCheckpointSaver)
+.flow-sessions/
+.pnpm-store/
+build/
+.npmrc
+.agents/
+.claude/
+.opencode/
+.codex/
+.tmp/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Python client
+client/.venv/
+client/__pycache__/
+client/**/__pycache__/
+client/data/
+client/dist/
+client/build/
+*.spec.bak
+
+# Runtime data (do not commit demo session/audit data)
+# 运行数据可能在根的 server/data，也可能在 web/backend/server/data
+server/data/
+**/server/data/
+client/data/settings.json
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# temp venv
+.venv-tmp/
+anatomy-atlas.json
+
+# 3D 资产：授权未登记，不入库（用户自备授权模型）
+web/frontend/vendor/models/
+*.glb
+docs/screenshots/03-3d.png
+
+# 本产品无 Android 端
+web/frontend/android/
+*.apk
+*.idsig
+
+# 知识库备份含第三方摘录，禁止公开
+kb-backup-*.json
+
+# 运行时数据与密钥（server/data/ 已忽略，补齐桌面端）
+win/frontend/data/
+**/local.env
+**/llm_config.json
+**/fernet.key
+**/sessions.json
+**/audit.jsonl
+
+# 虚拟环境与测试缓存
+.venv/
+**/.venv/
+.pytest_cache/
+.nuwax-agent/

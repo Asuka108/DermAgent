@@ -1,0 +1,170 @@
+{"text": "帮我写一份病例", "expect": "case_write", "expect_layer": 1}
+{"text": "写个门诊病历", "expect": "case_write", "expect_layer": 1}
+{"text": "进入诊断", "expect": "case_write", "expect_layer": 1}
+{"text": "患者男，35岁，右前臂红斑伴瘙痒3天", "expect": "case_write", "expect_layer": 2, "phase": "case_intake", "case_empty": true}
+{"text": "患者自述皮疹夜间瘙痒加重", "expect": "case_write", "expect_layer": 2, "phase": "case_intake", "case_empty": true}
+{"text": "门诊来了一个湿疹患者，想记录一下", "expect": "case_write", "expect_layer": 2, "phase": "case_intake", "case_empty": true}
+{"text": "好的，另外患者还有头痛", "expect": "case_write", "expect_layer": 2, "phase": "case_intake", "case_empty": false}
+{"text": "开始完整分析", "expect": "complete_analysis", "expect_layer": 1}
+{"text": "进行完整分析", "expect": "complete_analysis", "expect_layer": 1}
+{"text": "确认提交", "expect": "complete_analysis", "expect_layer": 1}
+{"text": "开始诊断辅助", "expect": "complete_analysis", "expect_layer": 1}
+{"text": "把这段改成更规范的描述", "expect": "case_edit", "expect_layer": 1}
+{"text": "重写一下这份病例", "expect": "case_edit", "expect_layer": 1}
+{"text": "修改病例：把病程改为两周", "expect": "case_edit", "expect_layer": 1}
+{"text": "把刚才的病例改成适合医生审核的门诊记录", "expect": "case_edit", "expect_layer": 1}
+{"text": "帮我写病历", "expect": "case_organizer", "expect_layer": 1}
+{"text": "整理一份病历", "expect": "case_organizer", "expect_layer": 1}
+{"text": "病例整理", "expect": "case_organizer", "expect_layer": 1}
+{"text": "只整理病历", "expect": "case_organizer", "expect_layer": 1}
+{"text": "对比病例", "expect": "case_compare", "expect_layer": 1}
+{"text": "和历史病例对比", "expect": "case_compare", "expect_layer": 1}
+{"text": "跟上次比较", "expect": "case_compare", "expect_layer": 1}
+{"text": "对比 abcdef12", "expect": "case_compare", "expect_layer": 1}
+{"text": "导出报告", "expect": "report_export", "expect_layer": 1}
+{"text": "生成报告", "expect": "report_export", "expect_layer": 1}
+{"text": "导出病历文件", "expect": "report_export", "expect_layer": 1}
+{"text": "只导出报告", "expect": "report_export", "expect_layer": 1}
+{"text": "分析图片", "expect": "image_analyze", "expect_layer": 1}
+{"text": "分析这张图", "expect": "image_analyze", "expect_layer": 1}
+{"text": "看看这张照片", "expect": "image_analyze", "expect_layer": 1}
+{"text": "图片分析", "expect": "image_analyze", "expect_layer": 1}
+{"text": "隐私脱敏", "expect": "privacy_deidentify", "expect_layer": 1}
+{"text": "数据脱敏", "expect": "privacy_deidentify", "expect_layer": 1}
+{"text": "病例脱敏", "expect": "privacy_deidentify", "expect_layer": 1}
+{"text": "只做脱敏", "expect": "privacy_deidentify", "expect_layer": 1}
+{"text": "只选身体部位", "expect": "body_region_3d", "expect_layer": 1}
+{"text": "单独选部位", "expect": "body_region_3d", "expect_layer": 1}
+{"text": "我只想在人体图上点一下部位", "expect": "body_region_3d", "expect_layer": 2, "phase": "case_intake", "case_empty": true}
+{"text": "检索知识库", "expect": "medical_kb_search", "expect_layer": 1}
+{"text": "搜索知识库", "expect": "medical_kb_search", "expect_layer": 1}
+{"text": "查医学资料", "expect": "medical_kb_search", "expect_layer": 1}
+{"text": "查文献", "expect": "medical_kb_search", "expect_layer": 1}
+{"text": "危险信号筛查", "expect": "red_flag_screen", "expect_layer": 1}
+{"text": "红旗筛查", "expect": "red_flag_screen", "expect_layer": 1}
+{"text": "筛查红旗", "expect": "red_flag_screen", "expect_layer": 1}
+{"text": "只查危险信号", "expect": "red_flag_screen", "expect_layer": 1}
+{"text": "鉴别诊断", "expect": "differential", "expect_layer": 1}
+{"text": "只做鉴别", "expect": "differential", "expect_layer": 1}
+{"text": "单独鉴别", "expect": "differential", "expect_layer": 1}
+{"text": "请根据当前病例列出需要鉴别的疾病和判断依据", "expect": "differential", "expect_layer": 1}
+{"text": "这个病还要考虑哪些别的诊断", "expect": "differential", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "治疗方向", "expect": "treatment_ref", "expect_layer": 1}
+{"text": "治疗参考", "expect": "treatment_ref", "expect_layer": 1}
+{"text": "只看治疗", "expect": "treatment_ref", "expect_layer": 1}
+{"text": "只做治疗方向", "expect": "treatment_ref", "expect_layer": 1}
+{"text": "这个病一般怎么治", "expect": "treatment_ref", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "用药核对", "expect": "medication_review", "expect_layer": 1}
+{"text": "用药清单", "expect": "medication_review", "expect_layer": 1}
+{"text": "药物核对", "expect": "medication_review", "expect_layer": 1}
+{"text": "单独查用药", "expect": "medication_review", "expect_layer": 1}
+{"text": "这些药能一起用吗", "expect": "medication_review", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "检查建议", "expect": "auxiliary", "expect_layer": 1}
+{"text": "辅助检查建议", "expect": "auxiliary", "expect_layer": 1}
+{"text": "只查检查", "expect": "auxiliary", "expect_layer": 1}
+{"text": "单独做检查建议", "expect": "auxiliary", "expect_layer": 1}
+{"text": "患者教育", "expect": "patient_edu", "expect_layer": 1}
+{"text": "健康教育", "expect": "patient_edu", "expect_layer": 1}
+{"text": "通俗解释", "expect": "patient_edu", "expect_layer": 1}
+{"text": "患者能看懂", "expect": "patient_edu", "expect_layer": 1}
+{"text": "病人能听懂的解释给我一份", "expect": "patient_edu", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "现病史", "expect": "history", "expect_layer": 1}
+{"text": "请整理现病史", "expect": "history", "expect_layer": 1}
+{"text": "单独写现病史", "expect": "history", "expect_layer": 1}
+{"text": "请只写现病史，不要生成诊断和治疗建议", "expect": "history", "expect_layer": 1}
+{"text": "皮损描述", "expect": "lesion_desc", "expect_layer": 1}
+{"text": "皮损记录", "expect": "lesion_desc", "expect_layer": 1}
+{"text": "皮损情况", "expect": "lesion_desc", "expect_layer": 1}
+{"text": "皮损表现", "expect": "lesion_desc", "expect_layer": 1}
+{"text": "病例摘要", "expect": "summary", "expect_layer": 1}
+{"text": "病历摘要", "expect": "summary", "expect_layer": 1}
+{"text": "只写病例摘要", "expect": "summary", "expect_layer": 1}
+{"text": "把病例浓缩成三句话", "expect": "summary", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "转诊", "expect": "referral", "expect_layer": 1}
+{"text": "转诊摘要", "expect": "referral", "expect_layer": 1}
+{"text": "只写转诊", "expect": "referral", "expect_layer": 1}
+{"text": "单独写转诊", "expect": "referral", "expect_layer": 1}
+{"text": "随访", "expect": "followup", "expect_layer": 1}
+{"text": "随访计划", "expect": "followup", "expect_layer": 1}
+{"text": "随访记录", "expect": "followup", "expect_layer": 1}
+{"text": "只写随访", "expect": "followup", "expect_layer": 1}
+{"text": "你好", "expect": "smalltalk", "expect_layer": 1}
+{"text": "你是谁", "expect": "smalltalk", "expect_layer": 1}
+{"text": "你有什么功能", "expect": "smalltalk", "expect_layer": 1}
+{"text": "在吗", "expect": "smalltalk", "expect_layer": 1}
+{"text": "谢谢", "expect": "smalltalk", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "跳过3D", "expect": "skip_3d", "expect_layer": 1}
+{"text": "不用3d", "expect": "skip_3d", "expect_layer": 1}
+{"text": "先不选部位", "expect": "skip_3d", "expect_layer": 1}
+{"text": "不用人体模型", "expect": "skip_3d", "expect_layer": 1}
+{"text": "补充图片", "expect": "add_image", "expect_layer": 1}
+{"text": "添加照片", "expect": "add_image", "expect_layer": 1}
+{"text": "上传图片", "expect": "add_image", "expect_layer": 1}
+{"text": "添加一张图片", "expect": "add_image", "expect_layer": 1}
+{"text": "重新追问", "expect": "reask", "expect_layer": 1}
+{"text": "问我还缺什么", "expect": "reask", "expect_layer": 1}
+{"text": "还缺什么信息", "expect": "reask", "expect_layer": 1}
+{"text": "重新询问患者", "expect": "reask", "expect_layer": 1}
+{"text": "撤销刚才的信息", "expect": "undo_last", "expect_layer": 1}
+{"text": "撤销上一条信息", "expect": "undo_last", "expect_layer": 1}
+{"text": "撤销刚才补充", "expect": "undo_last", "expect_layer": 1}
+{"text": "撤销刚才那条", "expect": "undo_last", "expect_layer": 1}
+{"text": "保存当前病例", "expect": "save_case", "expect_layer": 1}
+{"text": "保存病例草稿", "expect": "save_case", "expect_layer": 1}
+{"text": "先保存病例", "expect": "save_case", "expect_layer": 1}
+{"text": "保存当前草稿", "expect": "save_case", "expect_layer": 1}
+{"text": "返回对话", "expect": "back_to_chat", "expect_layer": 1}
+{"text": "回到聊天", "expect": "back_to_chat", "expect_layer": 1}
+{"text": "回到对话框", "expect": "back_to_chat", "expect_layer": 1}
+{"text": "返回聊天", "expect": "back_to_chat", "expect_layer": 1}
+{"text": "查看引用", "expect": "show_sources", "expect_layer": 1}
+{"text": "刚才的引用", "expect": "show_sources", "expect_layer": 1}
+{"text": "引用详情", "expect": "show_sources", "expect_layer": 1}
+{"text": "看引用", "expect": "show_sources", "expect_layer": 1}
+{"text": "打开人体模型", "expect": "open_model", "expect_layer": 1}
+{"text": "打开3D", "expect": "open_model", "expect_layer": 1}
+{"text": "打开三维模型", "expect": "open_model", "expect_layer": 1}
+{"text": "打开人体图", "expect": "open_model", "expect_layer": 1}
+{"text": "打开分析结果", "expect": "open_analysis", "expect_layer": 1}
+{"text": "查看分析结果", "expect": "open_analysis", "expect_layer": 1}
+{"text": "查看完整分析", "expect": "open_analysis", "expect_layer": 1}
+{"text": "打开结果窗口", "expect": "open_analysis", "expect_layer": 1}
+{"text": "把模型改成 qwen", "expect": "settings_control", "expect_layer": 1}
+{"text": "切换到英文", "expect": "settings_control", "expect_layer": 1}
+{"text": "界面语言改成英文", "expect": "settings_control", "expect_layer": 1}
+{"text": "思考等级调到中", "expect": "settings_control", "expect_layer": 1}
+{"text": "压缩上下文", "expect": "context_compress", "expect_layer": 1}
+{"text": "压缩记忆", "expect": "context_compress", "expect_layer": 1}
+{"text": "整理上下文", "expect": "context_compress", "expect_layer": 1}
+{"text": "压缩对话", "expect": "context_compress", "expect_layer": 1}
+{"text": "确认", "expect": "confirm", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "确认执行", "expect": "confirm", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "好的", "expect": "confirm", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "就这样", "expect": "confirm", "expect_layer": 1, "phase": "planning", "workflow_state": "planning", "case_empty": false}
+{"text": "拒绝", "expect": "deny", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "取消", "expect": "deny", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "算了", "expect": "deny", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "重新生成", "expect": "deny", "expect_layer": 1, "phase": "awaiting_review", "workflow_state": "awaiting_review", "case_empty": false}
+{"text": "确认", "expect": "confirm", "expect_layer": 2, "phase": "case_intake", "workflow_state": "screening", "case_empty": true, "note": "无待确认上下文时不得当确认"}
+{"text": "先不要导出报告", "expect": "case_write", "expect_layer": 2, "phase": "doc_ready", "case_empty": false, "note": "否定守卫：不得命中 report_export"}
+{"text": "医生说「鉴别诊断」这个词不用管，先写现病史", "expect": "history", "expect_layer": 1, "note": "引号守卫"}
+{"text": "帮我写现病史，然后再做鉴别诊断", "expect": "differential", "expect_layer": 2, "phase": "doc_ready", "case_empty": false, "note": "多目标守卫：交第二层"}
+{"text": "今天天气不错", "expect": "case_write", "expect_layer": 2, "phase": "case_intake", "case_empty": true, "note": "未命中规则 → 下放"}
+{"text": "把病程改成两周", "expect": "case_edit", "expect_layer": 1, "note": "易混：settings vs case_edit"}
+{"text": "把导出的报告再改一版", "expect": "case_edit", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "请生成转诊摘要", "expect": "referral", "expect_layer": 1}
+{"text": "请生成随访记录", "expect": "followup", "expect_layer": 1}
+{"text": "请生成病例摘要", "expect": "summary", "expect_layer": 1}
+{"text": "请生成用药核对清单", "expect": "medication_review", "expect_layer": 1}
+{"text": "请生成患者能看懂的健康教育说明", "expect": "patient_edu", "expect_layer": 1}
+{"text": "请把这份病例整理成治疗参考", "expect": "treatment_ref", "expect_layer": 1}
+{"text": "请描述皮损情况", "expect": "lesion_desc", "expect_layer": 1}
+{"text": "请根据以下信息写一份门诊病历：患者男，35岁", "expect": "case_write", "expect_layer": 1}
+{"text": "帮我看看这个皮疹像什么", "expect": "differential", "expect_layer": 2, "phase": "case_intake", "case_empty": false}
+{"text": "需不需要忌口", "expect": "patient_edu", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "开点药吧", "expect": "medication_review", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "要不要做个真菌镜检", "expect": "auxiliary", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "把刚才那份再来一份", "expect": "summary", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "接着上次那个继续", "expect": "case_write", "expect_layer": 2, "phase": "case_intake", "case_empty": false}
+{"text": "这个患者有没有危险信号", "expect": "red_flag_screen", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}
+{"text": "帮我查查教科书里怎么说", "expect": "medical_kb_search", "expect_layer": 2, "phase": "doc_ready", "case_empty": false}

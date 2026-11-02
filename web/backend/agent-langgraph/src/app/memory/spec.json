@@ -1,0 +1,39 @@
+{
+  "version": "memory-spec@2026-10-29",
+  "profile": {
+    "categories": {
+      "allergy": ["allergen", "reaction", "severity"],
+      "past_history": ["disease", "year", "status"],
+      "personal_history": ["smoking", "alcohol", "occupation", "travel"],
+      "medication": ["name", "dose", "frequency", "since", "indication"],
+      "family_history": ["disease", "relation"],
+      "diagnosis_history": ["diagnosis", "certainty", "date"],
+      "lab": ["test", "value", "unit", "date"]
+    },
+    "multi_valued": ["allergy", "medication", "family_history", "diagnosis_history", "lab"],
+    "min_confidence": 0.6,
+    "max_value_chars": 200,
+    "max_evidence_chars": 500
+  },
+  "episodic": {
+    "case_collection": "derm_episodic_case_v1",
+    "doctor_collection": "derm_episodic_doctor_v1",
+    "dim": 768,
+    "embed_model": "bge-base-zh-v1.5",
+    "chunk_max_chars": 1200,
+    "topic_max_chars": 300,
+    "top_k_case": 3,
+    "top_k_doctor": 3,
+    "score_threshold": 0.35,
+    "max_injected": 5,
+    "exclude_recent_turns": 2
+  },
+  "short_term": {
+    "rounds": 20,
+    "ttl_seconds": 604800
+  },
+  "budget": {
+    "profile_chars": 800,
+    "episodic_chars": 1200
+  }
+}

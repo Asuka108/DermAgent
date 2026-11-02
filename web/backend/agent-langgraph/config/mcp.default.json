@@ -1,0 +1,9 @@
+{
+  "_comment": "包内默认 MCP（fallback）。内置 ask-question；与平台 ACP mcpServers 合并，同名冲突时 session-wins（平台优先）。搜索/文档检索仍须平台登记 + ACP 下发。",
+  "servers": {
+    "ask-question": {
+      "command": "npx",
+      "args": ["-y", "nuwax-ask-question-mcp@latest"]
+    }
+  }
+}
